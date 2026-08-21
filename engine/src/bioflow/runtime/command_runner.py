@@ -72,5 +72,5 @@ def fastp_trim_argv(env_name: str, sample, sample_output_dir, threads, extra_com
     args += ["--out1", str(out / "R1.fastq")]
     if sample.fastq_2 is not None:
         args += ["--out2", str(out / "R2.fastq")]
-    args += ["-w", str(threads)]
+    args += ["-w", str(threads), "-j", str(out / "fastp.json"), "-h", str(out / "fastp.html")]
     return conda_command(env_name, "fastp", *args, *parse_extra_command_tokens(extra_command))
