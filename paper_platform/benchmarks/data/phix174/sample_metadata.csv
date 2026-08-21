@@ -1,0 +1,2 @@
+sample_id,fastq_1,fastq_2,condition
+PHIX174,phix174_R1.fastq.gz,phix174_R2.fastq.gz,control

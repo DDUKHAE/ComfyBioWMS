@@ -55,8 +55,10 @@ htmlcov/
 harness/registry/generations/*/
 !harness/registry/generations/.gitkeep
 .domain_bootstrap.lock
+/paper_platform
 
 # Build & Distribution
 build/
 dist/
 *.egg-info/
+

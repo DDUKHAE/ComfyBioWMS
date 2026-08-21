@@ -1,0 +1,2 @@
+sample_id,fastq_1,fastq_2,condition
+ZYMO_MOCK1,zymo_mock_R1.fastq.gz,zymo_mock_R2.fastq.gz,mock_community
