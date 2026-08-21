@@ -29,6 +29,7 @@ Thumbs.db
 .agents/
 .claude/
 .codex/
+/paper_platform
 
 # Large bioinformatics raw/intermediate data & indices
 *.bam
