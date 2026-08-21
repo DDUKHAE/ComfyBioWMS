@@ -1,5 +1,11 @@
 import argparse
+import sys
 from pathlib import Path
+
+# Ensure engine/src is on sys.path for standalone execution
+_ENGINE_SRC = Path(__file__).resolve().parents[2]
+if str(_ENGINE_SRC) not in sys.path:
+    sys.path.insert(0, str(_ENGINE_SRC))
 
 from bioflow.runtime.report import domain_report_markdown
 

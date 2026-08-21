@@ -3,10 +3,9 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python>=3.11
+  - python=3.10
   - fastp
   - spades
   - quast
   - matplotlib
-  - jellyfish
 

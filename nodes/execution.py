@@ -20,13 +20,21 @@ def require_environment(probe=None, requirements=BULK_RNA_SEQ_REQUIREMENTS):
 
 def load_preview_tensor(png_path):
     import numpy as np
-    import torch
     from PIL import Image
 
     path = Path(png_path)
+    img_array = None
     if path.is_file() and path.stat().st_size > 0:
         try:
-            return torch.from_numpy(np.asarray(Image.open(path).convert("RGB"), dtype="float32") / 255.0)[None,]
+            img_array = np.asarray(Image.open(path).convert("RGB"), dtype="float32") / 255.0
+            img_array = img_array[None, ...]
         except Exception:
             pass
-    return torch.zeros((1, 64, 64, 3), dtype=torch.float32)
+    if img_array is None:
+        img_array = np.zeros((1, 64, 64, 3), dtype="float32")
+
+    try:
+        import torch
+        return torch.from_numpy(img_array)
+    except ImportError:
+        return img_array

@@ -61,7 +61,7 @@ ComfyBIOWMS/
 │   └── README.md
 │
 ├── engine/                         # BioFlow Execution Engine Framework
-│   ├── envs/                       # 11 Conda environment specifications
+│   ├── envs/                       # 12 Conda environment specifications
 │   ├── scripts/                    # R and Python backend scripts
 │   └── src/bioflow/                # Conda execution runtime & benchmark engine
 │

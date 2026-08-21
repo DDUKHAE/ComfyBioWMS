@@ -37,7 +37,24 @@ class BiopythonSeqIONode(_BaseComfyBIONode):
                 for r in SeqIO.parse(str(file_path), file_format):
                     seq_records.append({"id": r.id, "length": len(r.seq), "description": r.description})
             except Exception:
-                seq_records.append({"id": "seq1", "length": 150, "description": "parsed from file"})
+                # High-fidelity built-in fasta parser
+                current_id = None
+                current_desc = ""
+                current_seq = []
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith(">"):
+                            if current_id:
+                                seq_records.append({"id": current_id, "length": len("".join(current_seq)), "description": current_desc})
+                            header_parts = line[1:].split(None, 1)
+                            current_id = header_parts[0]
+                            current_desc = header_parts[1] if len(header_parts) > 1 else current_id
+                            current_seq = []
+                        elif line:
+                            current_seq.append(line)
+                    if current_id:
+                        seq_records.append({"id": current_id, "length": len("".join(current_seq)), "description": current_desc})
         else:
             seq_records = [
                 {"id": "seq_01", "length": 1240, "description": "Synthetic Gene A"},

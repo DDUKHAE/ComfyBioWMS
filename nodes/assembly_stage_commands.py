@@ -17,10 +17,10 @@ def fastp_trim_argv(sample, sample_output_dir, threads, extra_command="") -> lis
 def spades_assemble_argv(read1, read2, outdir, threads, memory_gb, extra_command="") -> list[str]:
     args = []
     if read2 is not None:
-        args += ["--pe1-1", str(read1), "--pe1-2", str(read2)]
+        args += ["-1", str(read1), "-2", str(read2)]
     else:
-        args += ["--s1", str(read1)]
-    args += ["-o", str(outdir), "--threads", str(threads), "--memory", str(memory_gb), "--isolate"]
+        args += ["-s", str(read1)]
+    args += ["-o", str(outdir), "-t", str(threads), "-m", str(memory_gb)]
     return conda_command(ENV_NAME, "spades.py", *args, *parse_extra_command_tokens(extra_command))
 
 

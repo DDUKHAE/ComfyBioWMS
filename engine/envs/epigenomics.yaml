@@ -9,4 +9,5 @@ dependencies:
   - samtools
   - macs3
   - bedtools
+  - deeptools
   - matplotlib

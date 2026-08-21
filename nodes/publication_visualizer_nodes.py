@@ -79,7 +79,7 @@ class VolcanoPlotVisualizerNode(_BaseVisualizerNode):
         configure_publication_style(style=style, dpi=dpi)
         csv_path = Path(deg_results_table if deg_results_table else deg_results_csv)
 
-        if csv_path.exists() and csv_path.stat().st_size > 0:
+        if csv_path.is_file() and csv_path.stat().st_size > 0:
             df = pd.read_csv(csv_path)
         else:
             np.random.seed(42)
@@ -183,7 +183,7 @@ class ManhattanPlotVisualizerNode(_BaseVisualizerNode):
         configure_publication_style(style=style, dpi=dpi)
         csv_path = Path(gwas_data if gwas_data else gwas_summary_csv)
 
-        if csv_path.exists() and csv_path.stat().st_size > 0:
+        if csv_path.is_file() and csv_path.stat().st_size > 0:
             df = pd.read_csv(csv_path)
         else:
             np.random.seed(42)
@@ -280,7 +280,7 @@ class UmapScatterVisualizerNode(_BaseVisualizerNode):
         configure_publication_style(style=style, dpi=dpi)
         csv_path = Path(embedding_data if embedding_data else embedding_csv)
 
-        if csv_path.exists() and csv_path.stat().st_size > 0:
+        if csv_path.is_file() and csv_path.stat().st_size > 0:
             df = pd.read_csv(csv_path)
         else:
             np.random.seed(42)
@@ -371,7 +371,7 @@ class ClustermapHeatmapVisualizerNode(_BaseVisualizerNode):
         configure_publication_style(style=style, dpi=dpi)
         csv_path = Path(matrix_data if matrix_data else matrix_csv)
 
-        if csv_path.exists() and csv_path.stat().st_size > 0:
+        if csv_path.is_file() and csv_path.stat().st_size > 0:
             df = pd.read_csv(csv_path, index_col=0)
         else:
             np.random.seed(42)
@@ -570,7 +570,7 @@ class QqPlotVisualizerNode(_BaseVisualizerNode):
         configure_publication_style(style=style, dpi=dpi)
         csv_path = Path(pvalues_data if pvalues_data else pvalues_csv)
 
-        if csv_path.exists() and csv_path.stat().st_size > 0:
+        if csv_path.is_file() and csv_path.stat().st_size > 0:
             df = pd.read_csv(csv_path)
             pvals = df[pvalue_col].dropna().values if pvalue_col in df.columns else df.iloc[:, 0].dropna().values
         else:
