@@ -1,0 +1,62 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+conda_envs/
+
+# OS Specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.agents/
+.claude/
+.codex/
+
+# Large bioinformatics raw/intermediate data & indices
+*.bam
+*.bai
+*.cram
+*.crai
+*.fastq.gz
+*.fq.gz
+*.sam
+*.bwt
+*.sa
+*.pac
+*.ann
+*.amb
+*.sra
+
+# Testing and Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Node synthesizer generations & lock files
+harness/registry/generations/*/
+!harness/registry/generations/.gitkeep
+.domain_bootstrap.lock
+
+# Build & Distribution
+build/
+dist/
+*.egg-info/

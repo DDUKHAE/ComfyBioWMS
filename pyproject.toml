@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comfyui-biowms"
+version = "0.1.0"
+description = "A comprehensive ComfyUI custom node suite & workflow management system for high-throughput bioinformatics, computational biology, and CADD."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = [
+    "comfyui",
+    "custom-nodes",
+    "bioinformatics",
+    "workflow-manager",
+    "computational-biology",
+    "cadd",
+    "rnaseq",
+    "epigenomics",
+    "single-cell",
+    "metagenomics",
+]
+authors = [
+    { name = "ComfyBIOWMS Team" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "numpy>=1.24.0",
+    "pillow>=9.5.0",
+    "pyyaml>=6.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "pandas>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/DDUKHAE/ComfyBioWMS"
+Repository = "https://github.com/DDUKHAE/ComfyBioWMS"
+
+[tool.comfy]
+PublisherId = "ddukhae"
+DisplayName = "ComfyBioWMS"
+Icon = ""
+
+[tool.pytest.ini_options]
+pythonpath = [".", "engine/src"]
+testpaths = ["tests"]

@@ -1,0 +1,22 @@
+name: comfybio_microbiome_virome
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.10
+  - scikit-bio>=0.5.8
+  - biom-format>=2.1.14
+  - ete3>=3.1.2
+  - unifrac>=1.1.1
+  - kraken2>=2.1.2
+  - bracken>=2.8
+  - metaphlan>=4.0.6
+  - humann>=3.6
+  - prokka>=1.14.6
+  - bakta>=1.7.0
+  - ncbi-amrfinderplus>=3.11.14
+  - checkv>=1.0.1
+  - augur>=21.0.0
+  - pandas>=2.0.0
+  - numpy>=1.24.0

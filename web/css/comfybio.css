@@ -1,0 +1,20 @@
+/* ComfyBIOWMS Frontend Styling */
+
+.comfybio-badge {
+    font-size: 10px;
+    font-weight: bold;
+    color: #48cae4;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2px 4px;
+    border-radius: 3px;
+    margin-left: 6px;
+}
+
+.comfybio-preview-container {
+    width: 100%;
+    min-height: 200px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 4px;
+    overflow: hidden;
+}

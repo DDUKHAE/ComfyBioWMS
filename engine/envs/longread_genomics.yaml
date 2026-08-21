@@ -1,0 +1,23 @@
+name: comfybio_longread_genomics
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.10
+  - pysam>=0.21.0
+  - cyvcf2>=0.30.22
+  - pybedtools>=0.9.0
+  - mappy>=2.26
+  - pyfastx>=2.1.0
+  - seqkit>=2.4.0
+  - bowtie2>=2.5.1
+  - mosdepth>=0.3.3
+  - sniffles>=2.0.7
+  - cutesv>=2.0.2
+  - flye>=2.9.2
+  - hifiasm>=0.19.5
+  - racon>=1.5.0
+  - bcftools>=1.17
+  - pandas>=2.0.0
+  - numpy>=1.24.0

@@ -1,0 +1,15 @@
+name: bulk_rna_seq
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python>=3.11
+  - fastp
+  - fastqc
+  - trimmomatic
+  - salmon
+  - bioconductor-deseq2
+  - bioconductor-tximport
+  - r-ggplot2
+  - r-pheatmap
+
