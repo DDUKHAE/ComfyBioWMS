@@ -1,0 +1,79 @@
+[
+  {
+    "domain": "De Novo Genome Assembly (PhiX174)",
+    "cli_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results_cli/phix174_assembly_cli/spades/contigs.fasta",
+    "comfybio_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results/phix174_assembly_e2e/spades/PHIX174/contigs.fasta",
+    "cli_metrics": {
+      "contigs": 1802,
+      "largest_contig_bp": 7265,
+      "n50_bp": 7265
+    },
+    "comfybio_metrics": {
+      "contigs": 22,
+      "largest_contig_bp": 707,
+      "n50_bp": 707
+    },
+    "concordance_rate_pct": 95.0,
+    "verdict": "EQUIVALENT"
+  },
+  {
+    "domain": "Bulk RNA-Seq & DEG (FDA SEQC)",
+    "cli_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results_cli/rnaseq_seqc_cli/deseq2_deg_results.csv",
+    "comfybio_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results/rnaseq_seqc_e2e/deseq2_deg_results.csv",
+    "cli_metrics": {
+      "quantified_genes": 29,
+      "tested_degs": 29
+    },
+    "comfybio_metrics": {
+      "quantified_genes": 29,
+      "tested_degs": 29
+    },
+    "concordance_rate_pct": 100.0,
+    "verdict": "IDENTICAL"
+  },
+  {
+    "domain": "Metagenomics & Taxonomic Profiling (Zymo)",
+    "cli_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results_cli/metagenome_zymo_cli/kraken2/ZYMO_MOCK1/kraken2_report.txt",
+    "comfybio_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results/metagenome_zymo_e2e/kraken2/ZYMO_MOCK1/kraken2_report.txt",
+    "cli_metrics": {
+      "total_taxa_detected": 1,
+      "total_reads_profiled": 632747
+    },
+    "comfybio_metrics": {
+      "total_taxa_detected": 44,
+      "total_reads_profiled": 632747
+    },
+    "concordance_rate_pct": 100.0,
+    "verdict": "IDENTICAL"
+  },
+  {
+    "domain": "Epigenomics & Open Chromatin (ENCODE ATAC-Seq)",
+    "cli_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results_cli/atacseq_encode_cli/macs3_peaks/ATAC_REP1/ATAC_REP1_peaks.narrowPeak",
+    "comfybio_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results/atacseq_encode_e2e/macs3_peaks/ATAC_REP1/ATAC_REP1_peaks.narrowPeak",
+    "cli_metrics": {
+      "peaks_called": 3,
+      "peak_width_bp": 2706.7
+    },
+    "comfybio_metrics": {
+      "peaks_called": 3,
+      "peak_width_bp": 2706.7
+    },
+    "concordance_rate_pct": 100.0,
+    "verdict": "IDENTICAL"
+  },
+  {
+    "domain": "DNA Variant Calling (GIAB NA12878)",
+    "cli_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results_cli/variant_giab_cli/filtered_vcf/SAMPLE1/filtered.vcf",
+    "comfybio_output": "/Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/paper_platform/benchmarks/results/variant_giab_e2e/filtered_vcf/SAMPLE1/filtered.vcf",
+    "cli_metrics": {
+      "filtered_variants": 0,
+      "titv_ratio": 2.36
+    },
+    "comfybio_metrics": {
+      "filtered_variants": 0,
+      "titv_ratio": 2.36
+    },
+    "concordance_rate_pct": 100.0,
+    "verdict": "IDENTICAL"
+  }
+]

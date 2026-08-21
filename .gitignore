@@ -29,7 +29,6 @@ Thumbs.db
 .agents/
 .claude/
 .codex/
-/paper_platform
 
 # Large bioinformatics raw/intermediate data & indices
 *.bam
@@ -69,3 +68,7 @@ plots/
 *.k2d
 *.kmer_distrib
 
+# Benchmarks results directory
+paper_platform/benchmarks/results/
+paper_platform/benchmarks/results_cli/
+paper_platform/benchmarks/data/
