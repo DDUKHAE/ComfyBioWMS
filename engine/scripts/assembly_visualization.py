@@ -31,11 +31,13 @@ def main() -> None:
     args = parser.parse_args()
 
     report_files = sorted(args.qc_dir.glob("*/report.tsv"))
+    if not report_files and (args.qc_dir / "report.tsv").exists():
+        report_files = [args.qc_dir / "report.tsv"]
     if not report_files:
         raise SystemExit(f"No report.tsv files found under {args.qc_dir}")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    samples = [path.parent.name for path in report_files]
+    samples = [path.parent.name if path.parent != args.qc_dir else "Sample" for path in report_files]
     metrics = [parse_quast_report(path) for path in report_files]
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))

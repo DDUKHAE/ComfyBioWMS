@@ -8,9 +8,8 @@ import matplotlib.pyplot as plt
 
 def count_peaks(peaks_dir: Path) -> dict[str, int]:
     counts: dict[str, int] = {}
-    # MACS3 writes one file per sample at <peaks_dir>/<sample>/<sample>_peaks.narrowPeak;
-    # narrowPeak is a stable 10-column BED+4 format, one called peak per line.
-    for narrowpeak_path in sorted(peaks_dir.glob("*/*_peaks.narrowPeak")):
+    files = list(peaks_dir.glob("*/*_peaks.narrowPeak")) + list(peaks_dir.glob("*_peaks.narrowPeak"))
+    for narrowpeak_path in sorted(files):
         sample_name = narrowpeak_path.name.removesuffix("_peaks.narrowPeak")
         with narrowpeak_path.open(encoding="utf-8") as handle:
             counts[sample_name] = sum(1 for _ in handle)

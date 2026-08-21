@@ -68,6 +68,10 @@ def main() -> None:
     report_files = sorted(args.reports_dir.glob("*/bracken_output.txt"))
     if not report_files:
         report_files = sorted(args.reports_dir.glob("*/kraken2_report.txt"))
+    if not report_files and (args.reports_dir / "bracken_output.txt").exists():
+        report_files = [args.reports_dir / "bracken_output.txt"]
+    if not report_files and (args.reports_dir / "kraken2_report.txt").exists():
+        report_files = [args.reports_dir / "kraken2_report.txt"]
     if not report_files:
         raise SystemExit(f"No bracken_output.txt or kraken2_report.txt files found under {args.reports_dir}")
 
