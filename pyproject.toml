@@ -62,3 +62,6 @@ Icon = ""
 [tool.pytest.ini_options]
 pythonpath = [".", "engine/src"]
 testpaths = ["tests"]
+markers = [
+    "e2e: runs a real library or CLI tool against immutable official data",
+]
