@@ -85,6 +85,45 @@ Each CLI tool file defines the minimum local runner needed by its nodes:
 
 Conda and Apt instructions belong in the module docstring. Runtime execution uses the executable found on the active process `PATH`; a hidden project Conda wrapper is not part of the standalone contract.
 
+## Galaxy-Compatible Parameter Interface
+
+Galaxy's maintained tool wrappers are the primary reference for deciding which CLI parameters are common enough to expose directly on a ComfyUI node. Parameter names, types, choices, bounds, defaults, and command-line spellings are taken from a pinned revision of the relevant wrapper XML.
+
+Source priority is:
+
+1. the matching wrapper in the [Galaxy IUC tools repository](https://github.com/galaxyproject/tools-iuc);
+2. a wrapper maintained in an official Galaxy repository;
+3. the tool's own version-matched CLI documentation when no maintained Galaxy wrapper exists.
+
+The mapping follows the Galaxy tool XML `inputs/param` and `argument` semantics described in the [Galaxy tool schema](https://docs.galaxyproject.org/en/master/dev/schema.html). The implementation does not import Galaxy or parse wrapper XML at runtime.
+
+### Required and Optional Inputs
+
+- `required` contains biological input paths, output paths/directories, and tool parameters for which execution has no valid general default.
+- `optional` contains commonly adjusted Galaxy parameters with the same default, choices, and valid numeric bounds as the pinned wrapper.
+- Every CLI node provides `extra_command` as an `optional` multiline `STRING` with an empty default.
+- Parameters omitted by the Galaxy wrapper are available only through `extra_command`, unless exposing one is necessary for a supported output contract.
+- Wrapper-only orchestration settings that do not map to the underlying executable are not copied into the node interface.
+
+Each CLI tool file records the wrapper URL, commit, wrapper version, and upstream tool version in its module docstring. The verification matrix records the same source so later wrapper changes do not silently alter existing node behavior.
+
+### Preventing Duplicate Options
+
+Every CLI tool file declares a private managed-option table for the flags already represented by node inputs. Each entry lists all accepted short/long aliases and the number of following CLI values owned by that option. Boolean switches own zero following values.
+
+Before execution, the file:
+
+1. tokenizes `extra_command` with `shlex.split()`;
+2. removes managed flags and their owned values;
+3. recognizes both `--option value` and `--option=value` forms;
+4. recognizes documented short aliases, including attached values when the tool supports them;
+5. prints a warning listing ignored managed options; and
+6. appends only the remaining tokens to the generated argument list.
+
+Consequently, a value exposed in `required` or `optional` can be changed only through its node input. `extra_command` cannot override it by relying on duplicate-option ordering. Unknown and non-managed CLI options remain unchanged to preserve a CLI-like experience. Shell operators, redirections, and pipelines are passed as ordinary arguments because execution never uses `shell=True`.
+
+The managed-option table is intentionally local to each tool file. A generic cross-tool CLI parser is not introduced because option arity and short-option syntax differ between tools.
+
 ## Python Library Contract
 
 - Import optional scientific packages inside the node operation so that a missing package produces a focused installation error without preventing unrelated standalone files from loading.
@@ -119,6 +158,9 @@ Generated, handwritten, randomly sampled, or LLM-authored biological fixtures ar
 4. **Real E2E:** call the node's declared `FUNCTION` directly using official data and an installed real library or binary.
 5. **Artifact validation:** parse outputs independently with the relevant format parser or tool and assert content-level invariants, not merely path existence.
 6. **Failure propagation:** where an upstream fixture can trigger a genuine non-zero exit, assert the captured tool error is exposed.
+7. **Galaxy parameter parity:** compare every directly exposed CLI parameter with the pinned Galaxy wrapper for name, type, choice set, bounds, default, and emitted flag.
+8. **Duplicate filtering:** execute argument construction with managed flags in `extra_command`, covering long, equals, and short forms, and assert the node-input value is the only emitted value.
+9. **CLI passthrough:** provide a valid non-managed option through `extra_command` and verify that the real tool receives and applies it.
 
 Tests that inject a dry-run runner, manufacture an expected output, or allow production fallback generation do not count as E2E evidence.
 
@@ -126,23 +168,24 @@ Tests that inject a dry-run runner, manufacture an expected output, or allow pro
 
 Maintain `docs/node-verification-matrix.md` with one row per registered node and these columns:
 
-| Node | Tool/library and version | Official data URL and immutable revision | Input parameters | Required environment | Output validation | Status |
-|---|---|---|---|---|---|---|
+| Node | Tool/library and version | Galaxy wrapper URL, revision, and defaults | Official data URL and immutable revision | Input parameters | Required environment | Output validation | Status |
+|---|---|---|---|---|---|---|---|
 
 A row may be marked `verified` only when its referenced E2E command has passed in the current environment. Missing proprietary software, reference databases, GPU resources, or licenses are recorded as blockers rather than bypassed with fallback output.
 
 ## Implementation Order
 
 1. Add structural tests for the standalone file contract and remove fixed-count assumptions.
-2. Migrate Biopython into one library file using official Biopython test data.
-3. Migrate fastp and FastQC into separate tool files using pinned nf-core test data.
-4. Migrate BWA-MEM2, samtools, and bcftools into separate tool files and validate a small real variant-calling chain.
-5. Migrate SPAdes and QUAST, then Kraken2 and Bracken, when their databases and official fixtures are available.
-6. Migrate Scanpy and related single-cell Python libraries one library at a time.
-7. Migrate remaining genomics, epigenomics, proteomics, microbiome, and structural-biology tools in dependency-sized batches.
-8. Replace visualization fallbacks with real file inputs, then migrate their rendering-library files.
-9. Remove obsolete shared modules and per-node files only after their final consumer has migrated.
-10. Rebuild workflows exclusively from the verified registry.
+2. Add tests for Galaxy-derived node inputs and managed-option filtering.
+3. Migrate Biopython into one library file using official Biopython test data.
+4. Migrate fastp and FastQC into separate tool files using pinned Galaxy wrappers and nf-core test data.
+5. Migrate BWA-MEM2, samtools, and bcftools into separate tool files and validate a small real variant-calling chain.
+6. Migrate SPAdes and QUAST, then Kraken2 and Bracken, when their databases and official fixtures are available.
+7. Migrate Scanpy and related single-cell Python libraries one library at a time.
+8. Migrate remaining genomics, epigenomics, proteomics, microbiome, and structural-biology tools in dependency-sized batches.
+9. Replace visualization fallbacks with real file inputs, then migrate their rendering-library files.
+10. Remove obsolete shared modules and per-node files only after their final consumer has migrated.
+11. Rebuild workflows exclusively from the verified registry.
 
 ## Documentation Corrections
 
@@ -157,6 +200,7 @@ The refactor is complete when:
 - no registered node imports a project-local helper;
 - no registered node creates fallback biological results;
 - every registered CLI node performs PATH discovery, live logging, exit-code handling, and artifact validation;
+- every registered CLI node exposes Galaxy-derived common parameters, keeps `extra_command` optional, and filters collisions with managed options;
 - every registered node has a verified matrix row backed by an official immutable dataset;
 - the complete standalone, E2E, and package-registration suites pass freshly;
 - the obsolete files and inaccurate verification claims have been removed.
