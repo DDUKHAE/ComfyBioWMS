@@ -79,7 +79,7 @@ Each CLI tool file defines the minimum local runner needed by its nodes:
 3. Create the requested output directory with `Path.mkdir(parents=True, exist_ok=True)`.
 4. Build an argument list and tokenize optional arguments with `shlex.split()`; never use `shell=True`.
 5. Execute with `subprocess.Popen()`.
-6. Drain stdout and stderr concurrently, preserve their text, and print each stream to the corresponding terminal stream while the process is running.
+6. Drain human-readable stdout and stderr concurrently, preserve their text, and print each stream to the corresponding terminal stream while the process is running. When stdout is the biological result stream, write it directly to the declared output file instead of loading it into memory or flooding the terminal; stderr remains live and captured.
 7. Raise an exception containing the executable, exit code, command, and captured stderr when the exit status is non-zero.
 8. Verify required output files or directories exist and are non-empty before returning their paths.
 
