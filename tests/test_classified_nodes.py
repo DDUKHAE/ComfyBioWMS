@@ -24,6 +24,8 @@ def test_only_verified_nodes_are_registered():
         "BcftoolsMpileupNode",
         "BcftoolsCallNode",
         "BcftoolsFilterNode",
+        "SpadesNode",
+        "QuastNode",
     }
 
 

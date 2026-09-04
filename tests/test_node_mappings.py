@@ -5,7 +5,7 @@ def test_root_init_exports_exact_verified_set():
     import __init__ as root_package
 
     assert root_package.WEB_DIRECTORY == "./web"
-    assert len(root_package.NODE_CLASS_MAPPINGS) == 12
+    assert len(root_package.NODE_CLASS_MAPPINGS) == 14
     assert set(root_package.NODE_CLASS_MAPPINGS) == set(
         root_package.NODE_DISPLAY_NAME_MAPPINGS
     )

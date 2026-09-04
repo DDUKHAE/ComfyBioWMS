@@ -45,7 +45,7 @@ _MANAGED_OPTIONS = {
 
 
 def _file(value: str, label: str) -> Path:
-    path = Path(value).expanduser()
+    path = Path(value).expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
@@ -170,7 +170,7 @@ class FastpNode:
                 "fastp executable not found on PATH; install conda package fastp=1.3.6"
             )
 
-        out = Path(output_dir).expanduser()
+        out = Path(output_dir).expanduser().resolve()
         out.mkdir(parents=True, exist_ok=True)
         out1 = out / "R1.fastq.gz"
         out2 = out / "R2.fastq.gz"

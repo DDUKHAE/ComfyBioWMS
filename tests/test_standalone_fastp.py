@@ -47,16 +47,21 @@ def test_fastp_reports_missing_binary_before_creating_output(fastp_module, tmp_p
 
 
 @pytest.mark.e2e
-def test_fastp_runs_on_upstream_paired_data(fastp_module, tmp_path):
+def test_fastp_runs_on_upstream_paired_data(fastp_module, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     r1 = fetch_official_data("fastp_R1.fq", tmp_path)
     r2 = fetch_official_data("fastp_R2.fq", tmp_path)
     out1, out2, report_json, report_html = fastp_module.FastpNode().run(
         str(r1),
-        str(tmp_path / "out"),
+        "out",
         str(r2),
         threads=2,
         extra_command="--overrepresentation_analysis --thread 99",
     )
+    assert Path(out1).is_absolute()
+    assert Path(out2).is_absolute()
+    assert Path(report_json).is_absolute()
+    assert Path(report_html).is_absolute()
     assert Path(out1).stat().st_size > 0
     assert Path(out2).stat().st_size > 0
     report = json.loads(Path(report_json).read_text())

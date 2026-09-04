@@ -9,6 +9,7 @@
 | Python | Python 3.11+, Biopython 1.88, pytest |
 | QC | fastp 1.3.6; FastQC 0.12.1; Java runtime (`JAVA_HOME` 필요 가능) |
 | Variant | Bioconda `bwa-mem2=2.3`, samtools 1.24, bcftools 1.24가 `PATH`에 존재 |
+| Assembly | Bioconda `spades=4.3.0`, `quast=5.3.0`가 `PATH`에 존재 |
 | Galaxy 기준 | `galaxyproject/tools-iuc@6a1769b029357f74e43c73b3da515b5e6f02a608` |
 
 주의: 현재 Bioconda 패키지 메타데이터는 BWA-MEM2 2.3이지만 번들 실행 파일의 `bwa-mem2 version` 출력은 2.2.1이다. 기능 E2E는 통과했으나 이 불일치를 해소하기 전까지 런타임 버전 일치로 표기하지 않는다.
@@ -29,6 +30,8 @@
 | `BcftoolsMpileupNode` | bcftools 1.24 | 위 reference + indexed BAM | d250, Q13, q0, threads 1 | BCF 비어 있지 않음, `bcftools view -h` 성공 | 통과 |
 | `BcftoolsCallNode` | bcftools 1.24 | 위 mpileup BCF | multiallelic, variants only, default ploidy | VCF 생성, `bcftools view -h` 성공 | 통과 |
 | `BcftoolsFilterNode` | bcftools 1.24 | 위 called VCF | exclude `QUAL<10` | VCF 헤더 검증, 출력 record 수 ≤ 입력 | 통과 |
+| `SpadesNode` | SPAdes 4.3.0 | [SPAdes test `ecoli_1K_1.fq.gz`](https://raw.githubusercontent.com/ablab/spades/896694ce5c7a9050a6ffa9fccc950a4cd9f04363/assembler/test_dataset/ecoli_1K_1.fq.gz), [`ecoli_1K_2.fq.gz`](https://raw.githubusercontent.com/ablab/spades/896694ce5c7a9050a6ffa9fccc950a4cd9f04363/assembler/test_dataset/ecoli_1K_2.fq.gz) | paired, threads 2, memory 4GB, careful=false, cov_cutoff="off" | `contigs.fasta`, `scaffolds.fasta`, `spades.log` 비어 있지 않음, 표준 라이브러리로 FASTA 파싱 (정확히 1개 contig, 서열 길이 1000bp, NODE_1_length_1000 헤더 검증) | 통과 |
+| `QuastNode` | QUAST 5.3.0 | 위 SPAdes `contigs.fasta` | threads 2, min_contig 100, extra_command "-m 500 --silent" (관리 옵션 -m 500 무시, --silent 유지) | `report.tsv`, `report.html` 비어 있지 않음, `report.tsv` 파싱 `# contigs >= 1`, `Total length >= 1000` | 통과 |
 
 ## 실행 명령
 
@@ -41,6 +44,9 @@ pytest -q -m e2e tests/test_standalone_biopython.py tests/test_standalone_fastp.
 
 PATH=/opt/miniconda3/envs/variant_analysis/bin:$PATH \
 pytest -q -m e2e tests/test_standalone_bwa_mem2.py tests/test_standalone_samtools.py tests/test_standalone_bcftools.py
+
+PATH=/opt/miniconda3/envs/genome_assembly/bin:$PATH \
+pytest -q -m e2e tests/test_standalone_spades.py tests/test_standalone_quast.py
 ```
 
 등록되지 않은 기존 `*_node.py` 파일은 이 표의 통과 범위가 아니며, 공식 데이터 E2E 전까지 사용 가능 또는 구현 완료로 간주하지 않는다.

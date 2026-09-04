@@ -44,11 +44,14 @@ def test_fastqc_reports_missing_binary_before_creating_output(fastqc_module, tmp
 
 
 @pytest.mark.e2e
-def test_fastqc_runs_on_official_minimal_fastq(fastqc_module, tmp_path):
+def test_fastqc_runs_on_official_minimal_fastq(fastqc_module, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     input_file = fetch_official_data("fastqc_minimal.fastq", tmp_path)
     html, archive = fastqc_module.FastQCNode().run(
-        str(input_file), str(tmp_path / "out"), threads=2, kmers=7
+        str(input_file), "out", threads=2, kmers=7
     )
+    assert Path(html).is_absolute()
+    assert Path(archive).is_absolute()
     assert Path(html).stat().st_size > 0
     assert Path(archive).stat().st_size > 0
     with zipfile.ZipFile(archive) as zipped:

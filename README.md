@@ -2,7 +2,7 @@
 
 ComfyUI에서 실제 생물정보학 라이브러리와 CLI를 실행하는 커스텀 노드 모음입니다.
 
-현재 중앙 registry에는 공식 upstream 또는 nf-core 데이터로 End-to-End 검증한 12개 노드만 등록됩니다. 이전 워크플로우와 클래스 이름의 호환성은 보장하지 않으며, 워크플로우는 새 인터페이스를 기준으로 다시 작성합니다.
+현재 중앙 registry에는 공식 upstream 또는 nf-core 데이터로 End-to-End 검증한 14개 노드만 등록됩니다. 이전 워크플로우와 클래스 이름의 호환성은 보장하지 않으며, 워크플로우는 새 인터페이스를 기준으로 다시 작성합니다.
 
 ## 검증된 노드
 
@@ -14,6 +14,8 @@ ComfyUI에서 실제 생물정보학 라이브러리와 CLI를 실행하는 커�
 | `nodes/class_2/bwa_mem2.py` | reference index, read alignment |
 | `nodes/class_2/samtools.py` | sort, index, markdup |
 | `nodes/class_2/bcftools.py` | mpileup, call, filter |
+| `nodes/class_2/spades.py` | de novo genome assembly |
+| `nodes/class_2/quast.py` | genome assembly quality assessment |
 
 각 파일은 단독 복사 가능한 구조이며 자체 입력 검증, 실행기, 오류 처리, `NODE_CLASS_MAPPINGS`, `NODE_DISPLAY_NAME_MAPPINGS`를 포함합니다. 대용량 생물정보학 데이터는 경로 `STRING`으로 전달합니다.
 
@@ -25,6 +27,7 @@ CLI 노드는 Galaxy IUC wrapper의 자주 쓰는 파라미터를 UI에 노출�
 - fastp 1.3.6
 - FastQC 0.12.1 및 Java runtime
 - BWA-MEM2 2.3, samtools 1.24, bcftools 1.24
+- SPAdes 4.3.0, QUAST 5.3.0
 
 실행할 CLI는 ComfyUI 프로세스의 `PATH`에 있어야 합니다. 각 노드 파일 상단 docstring에 Python 및 외부 바이너리 요구조건이 기록되어 있습니다.
 

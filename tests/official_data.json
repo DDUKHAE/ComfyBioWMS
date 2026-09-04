@@ -30,5 +30,13 @@
   "sarek_R2.fastq.gz": {
     "url": "https://raw.githubusercontent.com/nf-core/test-datasets/24cdbea48c4415a29f668a724ce602fef8fed813/testdata/dummy/normal/dummy_n_R2_xxx.fastq.gz",
     "sha256": "c31608e380f9b44d9c4315289144707b6b09dbdbec4b24145315f877b47292f4"
+  },
+  "spades_1K_1.fq.gz": {
+    "url": "https://raw.githubusercontent.com/ablab/spades/896694ce5c7a9050a6ffa9fccc950a4cd9f04363/assembler/test_dataset/ecoli_1K_1.fq.gz",
+    "sha256": "4d2a35634b2acdbde5f706572a2997ab1402dbef2b3189f70274a85f5f06b024"
+  },
+  "spades_1K_2.fq.gz": {
+    "url": "https://raw.githubusercontent.com/ablab/spades/896694ce5c7a9050a6ffa9fccc950a4cd9f04363/assembler/test_dataset/ecoli_1K_2.fq.gz",
+    "sha256": "8958739949fca73ea47cd4a1117b8f81a8b87d117ce8d8c6ab24aea9a091bd2a"
   }
 }

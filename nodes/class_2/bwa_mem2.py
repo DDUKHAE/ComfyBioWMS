@@ -26,7 +26,7 @@ _ALIGN_MANAGED_OPTIONS = {
 
 
 def _file(value: str, label: str) -> Path:
-    path = Path(value).expanduser()
+    path = Path(value).expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
@@ -140,7 +140,7 @@ class BwaMem2IndexNode:
     def run(self, reference_fasta, output_dir, extra_command=""):
         source = _file(reference_fasta, "Reference FASTA")
         executable = _executable()
-        out = Path(output_dir).expanduser()
+        out = Path(output_dir).expanduser().resolve()
         out.mkdir(parents=True, exist_ok=True)
         reference = out / source.name
         if source.resolve() != reference.resolve():
@@ -204,7 +204,7 @@ class BwaMem2AlignNode:
         read1_path = _file(read1, "Read 1")
         read2_path = _file(read2, "Read 2") if read2 else None
         executable = _executable()
-        output = Path(output_sam).expanduser()
+        output = Path(output_sam).expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         kept, ignored = _filter_extra(extra_command, _ALIGN_MANAGED_OPTIONS)
         if ignored:

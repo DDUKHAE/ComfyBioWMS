@@ -16,5 +16,7 @@
 | `BcftoolsMpileupNode` | bcftools 1.24 | BCF produced and parsed |
 | `BcftoolsCallNode` | bcftools 1.24 | VCF produced and parsed |
 | `BcftoolsFilterNode` | bcftools 1.24 | Filtered VCF parsed; record monotonicity checked |
+| `SpadesNode` | SPAdes 4.3.0 | Official paired FASTQ assembled; contigs/scaffolds/log checked and contig sequence parsed |
+| `QuastNode` | QUAST 5.3.0 | Assembled contigs evaluated; report TSV/HTML parsed and metrics checked |
 
 데이터 URL, 체크섬, 입력값, 상세 판정 기준 및 BWA-MEM2 버전 표시 주석은 [`docs/node-verification-matrix.md`](docs/node-verification-matrix.md)에 있다. 그 외 소스 파일은 마이그레이션 후보이며 검증 완료로 주장하지 않는다.

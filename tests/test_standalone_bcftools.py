@@ -68,30 +68,34 @@ def test_bcftools_missing_binary_does_not_create_output(bcftools_module, tmp_pat
 
 
 @pytest.mark.e2e
-def test_bcftools_mpileup_call_filter_official_sarek_alignment(bcftools_module, tmp_path):
+def test_bcftools_mpileup_call_filter_official_sarek_alignment(bcftools_module, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     bwa = load_module("standalone_bwa_for_bcftools", BWA_MODULE)
     samtools = load_module("standalone_samtools_for_bcftools", SAMTOOLS_MODULE)
     reference = fetch_official_data("sarek_ref.fasta", tmp_path)
     read1 = fetch_official_data("sarek_R1.fastq.gz", tmp_path)
     read2 = fetch_official_data("sarek_R2.fastq.gz", tmp_path)
     subprocess.run(["samtools", "faidx", str(reference)], check=True)
-    (indexed_reference,) = bwa.BwaMem2IndexNode().run(str(reference), str(tmp_path / "bwa"))
+    (indexed_reference,) = bwa.BwaMem2IndexNode().run(str(reference), "bwa")
     (sam_path,) = bwa.BwaMem2AlignNode().run(
-        indexed_reference, str(read1), str(tmp_path / "reads.sam"), read2=str(read2)
+        indexed_reference, str(read1), "reads.sam", read2=str(read2)
     )
-    (bam_path,) = samtools.SamtoolsSortNode().run(sam_path, str(tmp_path / "reads.bam"))
+    (bam_path,) = samtools.SamtoolsSortNode().run(sam_path, "reads.bam")
     samtools.SamtoolsIndexNode().run(bam_path)
 
     (bcf_path,) = bcftools_module.BcftoolsMpileupNode().run(
-        str(reference), bam_path, str(tmp_path / "calls.bcf"), extra_command="--threads=99 -a FORMAT/DP"
+        str(reference), bam_path, "calls.bcf", extra_command="--threads=99 -a FORMAT/DP"
     )
     (called_path,) = bcftools_module.BcftoolsCallNode().run(
-        bcf_path, str(tmp_path / "called.vcf"), extra_command="-m --keep-alts"
+        bcf_path, "called.vcf", extra_command="-m --keep-alts"
     )
     (filtered_path,) = bcftools_module.BcftoolsFilterNode().run(
-        called_path, str(tmp_path / "filtered.vcf"), exclude="QUAL<10"
+        called_path, "filtered.vcf", exclude="QUAL<10"
     )
 
+    assert Path(bcf_path).is_absolute()
+    assert Path(called_path).is_absolute()
+    assert Path(filtered_path).is_absolute()
     for artifact in (bcf_path, called_path, filtered_path):
         subprocess.run(["bcftools", "view", "-h", artifact], check=True, capture_output=True)
     count = lambda path: int(subprocess.run(

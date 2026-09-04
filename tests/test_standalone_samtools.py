@@ -57,24 +57,28 @@ def test_samtools_missing_binary_does_not_create_output(samtools_module, tmp_pat
 
 
 @pytest.mark.e2e
-def test_samtools_sort_index_markdup_official_sarek_alignment(samtools_module, tmp_path):
+def test_samtools_sort_index_markdup_official_sarek_alignment(samtools_module, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     bwa = load_module("standalone_bwa_for_samtools", BWA_MODULE)
     reference = fetch_official_data("sarek_ref.fasta", tmp_path)
     read1 = fetch_official_data("sarek_R1.fastq.gz", tmp_path)
     read2 = fetch_official_data("sarek_R2.fastq.gz", tmp_path)
-    (indexed_reference,) = bwa.BwaMem2IndexNode().run(str(reference), str(tmp_path / "bwa"))
+    (indexed_reference,) = bwa.BwaMem2IndexNode().run(str(reference), "bwa")
     (sam_path,) = bwa.BwaMem2AlignNode().run(
-        indexed_reference, str(read1), str(tmp_path / "reads.sam"), read2=str(read2)
+        indexed_reference, str(read1), "reads.sam", read2=str(read2)
     )
 
     (sorted_bam,) = samtools_module.SamtoolsSortNode().run(
-        sam_path, str(tmp_path / "sorted.bam"), threads=2, extra_command="-@ 99"
+        sam_path, "sorted.bam", threads=2, extra_command="-@ 99"
     )
     (index_path,) = samtools_module.SamtoolsIndexNode().run(sorted_bam, threads=2)
     (marked_bam,) = samtools_module.SamtoolsMarkdupNode().run(
-        sorted_bam, str(tmp_path / "marked.bam"), threads=2
+        sorted_bam, "marked.bam", threads=2
     )
 
+    assert Path(sorted_bam).is_absolute()
+    assert Path(index_path).is_absolute()
+    assert Path(marked_bam).is_absolute()
     assert Path(index_path).is_file()
     subprocess.run(["samtools", "quickcheck", sorted_bam, marked_bam], check=True)
     idxstats = subprocess.run(

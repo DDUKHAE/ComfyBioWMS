@@ -37,7 +37,7 @@ _MANAGED_OPTIONS = {
 
 
 def _file(value: str, label: str) -> Path:
-    path = Path(value).expanduser()
+    path = Path(value).expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
@@ -165,7 +165,7 @@ class FastQCNode:
                 "FastQC executable not found on PATH; install conda package fastqc=0.12.1"
             )
 
-        out = Path(output_dir).expanduser()
+        out = Path(output_dir).expanduser().resolve()
         out.mkdir(parents=True, exist_ok=True)
         kept, ignored = _filter_extra(extra_command, _MANAGED_OPTIONS)
         if ignored:

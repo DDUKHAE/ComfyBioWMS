@@ -9,7 +9,7 @@
 - 각 파일이 입력 검증, 실행, 로그, 오류 처리와 두 ComfyUI 매핑을 직접 가진다.
 - FASTA/FASTQ/BAM/VCF/GFF 등은 메모리 객체가 아닌 경로 `STRING`으로 전달한다.
 - 호환성을 보존하지 않는다. 기존 워크플로우는 새 인터페이스를 기준으로 다시 만든다.
-- 공식 데이터 E2E가 통과한 노드만 중앙 registry에 등록한다. 현재 등록 범위는 12개다.
+- 공식 데이터 E2E가 통과한 노드만 중앙 registry에 등록한다. 현재 등록 범위는 14개다.
 
 ## 기존 파일 → 도구/라이브러리별 파일
 
@@ -20,7 +20,7 @@
 | `biopython_nodes.py`, `biopython_sequence_info.py` | **`class_1/biopython.py`**, `class_2/blast.py`, `class_1/logomaker.py`, `biotite.py`, `pyhmmer.py`, `dna_features_viewer.py`, `primer3.py`, `pyfaidx.py`, `pycircos.py`, `edlib.py`, `codonw.py`, `pytfbs.py`, `kegg.py` | Biopython 완료, 나머지 미등록 |
 | `ref_nodes.py` | 입력검증, **`class_2/fastp.py`**, **`fastqc.py`**, `trimmomatic.py`, `salmon.py`, `tximport.py`, `deseq2.py`, `class_1/scanpy.py`, `cellranger.py`, 시각화, 보고서 | fastp/FastQC 완료 |
 | `variant_nodes.py` | 입력검증, **`class_2/bwa_mem2.py`**, **`samtools.py`**, **`bcftools.py`**, 시각화, 보고서 | CLI 3종 완료 |
-| `assembly_nodes.py` | 입력검증, **`fastp.py`**, `spades.py`, `quast.py`, 시각화, 보고서 | fastp 완료 |
+| `assembly_nodes.py` | 입력검증, **`fastp.py`**, **`class_2/spades.py`**, **`class_2/quast.py`**, 시각화, 보고서 | fastp, SPAdes, QUAST 완료 |
 | `atac_nodes.py` | 입력검증, **`fastp.py`**, **`bwa_mem2.py`**, **`samtools.py`**, `macs3.py`, 시각화, 보고서 | 공통 CLI 완료 |
 | `metagenome_nodes.py` | 입력검증, **`fastp.py`**, `kraken2.py`, `bracken.py`, 시각화, 보고서 | fastp 완료 |
 | `genomics_longread_nodes.py` | `pysam.py`, `cyvcf2.py`, `pybedtools.py`, `mappy.py`, `pyfastx.py`, `seqkit.py`, `bowtie2.py`, `mosdepth.py`, `sniffles2.py`, `cutesv.py`, `flye.py`, `hifiasm.py`, `racon.py`, `medaka.py`, `deepvariant.py` | 미등록 |
@@ -51,13 +51,15 @@
 | bcftools `mpileup` | reference, depth, base/map quality, threads, output 형식/경로 옵션 |
 | bcftools `call` | caller, variants-only, ploidy, threads, output 형식/경로 옵션 |
 | bcftools `filter` | include/exclude, soft filter, SNP/indel gap, threads, output 형식/경로 옵션 |
+| spades | `-1/-2/-s/--12/-o/--output-dir/-t/--threads/-m/--memory/--careful/--sc/--meta/--isolate/--only-assembler/--cov-cutoff/-k/--kmers/--phred-offset` |
+| quast | `-o/--output-dir/-r/--reference/-g/--features/-m/--min-contig/-t/--threads/--large` |
 
 ## 구현 우선순위와 반복 절차
 
 | 우선순위 | 범위 | 완료 조건 |
 |---:|---|---|
 | 1 | Biopython, fastp, FastQC, BWA-MEM2, samtools, bcftools | 완료: 6개 파일, 12개 노드 등록 및 공식 데이터 E2E |
-| 2 | SPAdes/QUAST, MACS3, Kraken2/Bracken, Salmon/DESeq2 | 대표 DNA/RNA/assembly/metagenome 파이프라인 E2E |
+| 2 | SPAdes/QUAST, MACS3, Kraken2/Bracken, Salmon/DESeq2 | SPAdes/QUAST 완료 (2개 파일, 2개 노드 추가 등록); 대표 파이프라인 후속 진행 |
 | 3 | pysam/cyvcf2/pybedtools/scanpy/anndata/scikit-bio | 라이브러리별 공식 fixture 파싱과 실제 출력 검증 |
 | 4 | long-read, single-cell/spatial, epigenomics | 공식 도구 example 또는 nf-core 데이터로 기능별 E2E |
 | 5 | proteomics/metabolomics, 구조생물학, 시각화 | 큰 모델/DB 요구량을 명시하고 실행 가능한 CI 계층 분리 |
@@ -69,6 +71,3 @@
 3. 한 도구 파일에 최소 구현
 4. 노드 메서드를 호출해 산출물을 해당 공식 parser/CLI로 재검증
 5. 검증 매트릭스 갱신 후 registry 등록
-
-세부 구현 체크리스트는
-[`superpowers/plans/2026-09-04-standalone-bioinformatics-nodes-phase-1.md`](superpowers/plans/2026-09-04-standalone-bioinformatics-nodes-phase-1.md)를 따른다.

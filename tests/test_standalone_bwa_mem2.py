@@ -47,22 +47,24 @@ def test_bwa_mem2_missing_binary_does_not_create_output(bwa_module, tmp_path, mo
 
 
 @pytest.mark.e2e
-def test_bwa_mem2_indexes_and_aligns_official_sarek_data(bwa_module, tmp_path):
+def test_bwa_mem2_indexes_and_aligns_official_sarek_data(bwa_module, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     reference = fetch_official_data("sarek_ref.fasta", tmp_path)
     read1 = fetch_official_data("sarek_R1.fastq.gz", tmp_path)
     read2 = fetch_official_data("sarek_R2.fastq.gz", tmp_path)
     (indexed_reference,) = bwa_module.BwaMem2IndexNode().run(
-        str(reference), str(tmp_path / "index")
+        str(reference), "index"
     )
-    output_sam = tmp_path / "aligned" / "reads.sam"
+    assert Path(indexed_reference).is_absolute()
     (sam_path,) = bwa_module.BwaMem2AlignNode().run(
         indexed_reference,
         str(read1),
-        str(output_sam),
+        "aligned/reads.sam",
         read2=str(read2),
         threads=2,
         extra_command="-t 99 -Y",
     )
+    assert Path(sam_path).is_absolute()
     lines = Path(sam_path).read_text().splitlines()
     assert lines[0].startswith("@")
     assert any(not line.startswith("@") for line in lines)

@@ -34,7 +34,7 @@ _FILTER_MANAGED = {
 
 
 def _file(value, label):
-    path = Path(value).expanduser()
+    path = Path(value).expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
@@ -149,7 +149,7 @@ class BcftoolsMpileupNode:
         bam = _file(input_bam, "Input BAM")
         _file(str(reference) + ".fai", "Reference FASTA index")
         executable = _executable()
-        output = Path(output_bcf).expanduser()
+        output = Path(output_bcf).expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         argv = [executable, "mpileup", "-f", str(reference), "-d", str(max_depth), "-Q", str(min_base_quality), "-q", str(min_mapping_quality), "--threads", str(threads), "-Ob", "-o", str(output)]
         argv += _extras(extra_command, _MPILEUP_MANAGED, "mpileup") + [str(bam)]
@@ -183,7 +183,7 @@ class BcftoolsCallNode:
     def run(self, input_bcf, output_vcf, calling_method="multiallelic", variants_only=True, ploidy="default", threads=1, extra_command=""):
         source = _file(input_bcf, "Input BCF")
         executable = _executable()
-        output = Path(output_vcf).expanduser()
+        output = Path(output_vcf).expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         argv = [executable, "call", "-m" if calling_method == "multiallelic" else "-c"]
         if variants_only:
@@ -226,7 +226,7 @@ class BcftoolsFilterNode:
             raise ValueError("include and exclude expressions are mutually exclusive")
         source = _file(input_vcf, "Input VCF/BCF")
         executable = _executable()
-        output = Path(output_vcf).expanduser()
+        output = Path(output_vcf).expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         argv = [executable, "filter", "--threads", str(threads), "-Ov", "-o", str(output)]
         if exclude:

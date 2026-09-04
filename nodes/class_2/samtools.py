@@ -22,7 +22,7 @@ _MARKDUP_MANAGED = {"-@": 1, "-r": 0, "--mode": 1, "-d": 1, "-f": 1}
 
 
 def _file(value, label):
-    path = Path(value).expanduser()
+    path = Path(value).expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
@@ -132,7 +132,7 @@ class SamtoolsSortNode:
     def run(self, input_alignment, output_bam, threads=1, sort_order="coordinate", memory_per_thread="768M", extra_command=""):
         source = _file(input_alignment, "Input alignment")
         executable = _executable()
-        output = Path(output_bam).expanduser()
+        output = Path(output_bam).expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         argv = [executable, "sort", "-@", str(threads), "-m", memory_per_thread, "-O", "BAM", "-o", str(output)]
         if sort_order == "name":
@@ -166,7 +166,7 @@ class SamtoolsIndexNode:
     def run(self, input_bam, output_index="", threads=1, index_format="bai", extra_command=""):
         source = _file(input_bam, "Input BAM")
         executable = _executable()
-        output = Path(output_index).expanduser() if output_index else Path(str(source) + (".csi" if index_format == "csi" else ".bai"))
+        output = Path(output_index).expanduser().resolve() if output_index else Path(str(source) + (".csi" if index_format == "csi" else ".bai")).resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         argv = [executable, "index", "-@", str(threads), "-c" if index_format == "csi" else "-b", "-o", str(output)]
         argv += _extras(extra_command, _INDEX_MANAGED, "index") + [str(source)]
@@ -202,7 +202,7 @@ class SamtoolsMarkdupNode:
     def run(self, input_bam, output_bam, threads=1, remove_duplicates=False, mode="template", optical_distance=100, extra_command=""):
         source = _file(input_bam, "Input BAM")
         executable = _executable()
-        output = Path(output_bam).expanduser()
+        output = Path(output_bam).expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         extra = _extras(extra_command, _MARKDUP_MANAGED, "markdup")
         with tempfile.TemporaryDirectory(dir=output.parent) as temporary:
