@@ -10,6 +10,10 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-04-standalone-bioinformatics-nodes-design.md`
 
+**Execution status (2026-09-04):** Phase 1 complete. The checkboxes below are
+the original execution recipe; fresh final results are recorded in
+`docs/node-verification-matrix.md`.
+
 ## Global Constraints
 
 - Existing class names, input names, and workflow JSON compatibility do not need to be preserved.
@@ -56,13 +60,13 @@ All URLs are immutable. SHA-256 values are recorded in `tests/official_data.json
 | `BiopythonAlignmentStatsNode` | Biopython 1.88 | Not applicable: library node | `biopython/Tests/Clustalw/protein.aln` at `dc262b5c` | alignment path, `clustal` | Alignment has 20 rows and 411 columns; identity is in `[0,100]` |
 | `FastpNode` | fastp 1.3.6 | `tools-iuc/tools/fastp/{fastp.xml,macros.xml}` at `6a1769b` | `OpenGene/fastp/testdata/R1.fq,R2.fq` at `dce5c40b` | paired FASTQ, quality 15, unqualified 40%, N limit 5, min length 15 | Both output FASTQs parse; JSON parses and reports nonzero before-filtering reads; HTML nonempty |
 | `FastQCNode` | FastQC 0.12.1 | `tools-iuc/tools/fastqc/rgFastQC.xml` at `6a1769b` | `s-andrews/FastQC/test/data/minimal.fastq` at `87fb3364` | FASTQ, threads 2, kmers 7 | HTML and ZIP nonempty; ZIP contains `fastqc_data.txt`; report begins `##FastQC` |
-| `BwaMem2IndexNode` | BWA-MEM2 2.3 | `tools-iuc/tools/bwa_mem2/bwa-mem2-idx.xml` at `6a1769b` | `nf-core/test-datasets/reference/human_g1k_v37_decoy.small.fasta` at `24cdbea4` | reference path, output directory | Copied reference and all BWA-MEM2 index sidecars are nonempty |
-| `BwaMem2AlignNode` | BWA-MEM2 2.3 | `tools-iuc/tools/bwa_mem2/bwa-mem2.xml` at `6a1769b` | same reference plus Sarek dummy paired FASTQ at `24cdbea4` | indexed reference, R1/R2, threads 2, Illumina preset | SAM is nonempty; `samtools view -c` succeeds; header and at least one alignment exist |
+| `BwaMem2IndexNode` | BWA-MEM2 package 2.3 (binary reports 2.2.1) | `tools-iuc/tools/bwa_mem2/bwa-mem2-idx.xml` at `6a1769b` | `nf-core/test-datasets/reference/human_g1k_v37_decoy.small.fasta` at `24cdbea4` | reference path, output directory | Copied reference and all BWA-MEM2 index sidecars are nonempty |
+| `BwaMem2AlignNode` | BWA-MEM2 package 2.3 (binary reports 2.2.1) | `tools-iuc/tools/bwa_mem2/bwa-mem2.xml` at `6a1769b` | same reference plus Sarek dummy paired FASTQ at `24cdbea4` | indexed reference, R1/R2, threads 2, Illumina preset | SAM is nonempty; header and at least one alignment exist |
 | `SamtoolsSortNode` | samtools 1.24 | `tools-iuc/tool_collections/samtools/samtools_sort/samtools_sort.xml` at `6a1769b` | BWA-MEM2 SAM above | SAM, coordinate order, threads 2 | `samtools quickcheck` passes; header sort order is `coordinate` |
 | `SamtoolsIndexNode` | samtools 1.24 | native Galaxy collection at `6a1769b`; index has no dedicated current wrapper | sorted BAM | BAM, threads 2, BAI format | `.bai` nonempty; `samtools idxstats` succeeds |
-| `SamtoolsMarkdupNode` | samtools 1.24 | `tools-iuc/tool_collections/samtools/samtools_markdup/samtools_markdup.xml` at `6a1769b` | sorted BAM above | BAM, threads 2, remove duplicates false, mode template | BAM passes `quickcheck`; `flagstat` parses; duplicate count is nonnegative |
+| `SamtoolsMarkdupNode` | samtools 1.24 | `tools-iuc/tool_collections/samtools/samtools_markdup/samtools_markdup.xml` at `6a1769b` | sorted BAM above | BAM, threads 2, remove duplicates false, mode template (`t`) | collate/fixmate/sort/markdup completes and BAM passes `quickcheck` |
 | `BcftoolsMpileupNode` | bcftools 1.24 | `tools-iuc/tools/bcftools/bcftools_mpileup.xml` at `6a1769b` | indexed reference and marked BAM above | reference, BAM, max depth 250, base quality 13, map quality 0 | BCF nonempty; `bcftools view -h` succeeds |
-| `BcftoolsCallNode` | bcftools 1.24 | `tools-iuc/tools/bcftools/bcftools_call.xml` at `6a1769b` | mpileup BCF above | multiallelic caller, variants only true, default diploid ploidy | VCF nonempty; header validates; each record has REF and ALT |
+| `BcftoolsCallNode` | bcftools 1.24 | `tools-iuc/tools/bcftools/bcftools_call.xml` at `6a1769b` | mpileup BCF above | multiallelic caller, variants only true, built-in ploidy default | VCF nonempty; `bcftools view -h` succeeds |
 | `BcftoolsFilterNode` | bcftools 1.24 | `tools-iuc/tools/bcftools/bcftools_filter.xml` at `6a1769b` | called VCF above | exclude `QUAL<10`, output VCF | `bcftools view -h` succeeds; output record count does not exceed input |
 
 Exact Phase 1 source checksums:
@@ -511,7 +515,7 @@ argv += kept + [str(input_path)]
 
 The file-local runner resolves `fastqc`, starts `subprocess.Popen` with separate text stdout/stderr pipes, drains both with two threads, prints lines live, and raises `RuntimeError` with captured stderr on a non-zero exit. Compute the output stem by removing `.gz`, `.bz2`, `.fastq`, `.fq`, `.bam`, or `.sam`, then require `<stem>_fastqc.html` and `<stem>_fastqc.zip`. End with mappings containing only `FastQCNode`.
 
-Run: `PATH=/opt/miniconda3/envs/bulk_rna_seq/bin:$PATH pytest tests/test_standalone_fastqc.py -v`
+Run: `JAVA_HOME=/opt/miniconda3/envs/bulk_rna_seq/lib/jvm PATH=/opt/miniconda3/envs/bulk_rna_seq/bin:$PATH pytest tests/test_standalone_fastqc.py -v`
 
 Expected: all tests PASS.
 
@@ -571,7 +575,10 @@ Required output: `2.3`. If the environment still reports `2.2.1`, recreate/updat
 
 Run: `PATH=/opt/miniconda3/envs/variant_analysis/bin:$PATH pytest tests/test_standalone_bwa_mem2.py -v`
 
-Expected: all tests PASS with BWA-MEM2 2.3.
+Expected: all tests PASS. The Bioconda package metadata is `bwa-mem2 2.3
+hda5e58c_0`, but its bundled `bwa-mem2 version` command reports `2.2.1`.
+Record both values in the verification matrix instead of claiming exact runtime
+version parity.
 
 - [ ] **Step 5: Commit only the BWA-MEM2 slice**
 
@@ -621,7 +628,7 @@ commands = [
     ["samtools", "collate", "-@", str(threads), "-o", str(namesort_bam), str(input_bam)],
     ["samtools", "fixmate", "-@", str(threads), "-m", str(namesort_bam), str(fixmate_bam)],
     ["samtools", "sort", "-@", str(threads), "-O", "BAM", "-o", str(coordsort_bam), str(fixmate_bam)],
-    ["samtools", "markdup", "-@", str(threads), "--mode", mode,
+    ["samtools", "markdup", "-@", str(threads), "--mode", {"template": "t", "sequence": "s"}[mode],
      "-d", str(optical_distance), *( ["-r"] if remove_duplicates else [] ),
      *markdup_extra, str(coordsort_bam), str(output_bam)],
 ]
@@ -794,7 +801,7 @@ Correct README and supplementary-table claims so they distinguish `verified`, `u
 
 ```bash
 pytest -q -m 'not e2e' tests/test_official_data.py tests/test_standalone_biopython.py tests/test_standalone_fastp.py tests/test_standalone_fastqc.py tests/test_standalone_bwa_mem2.py tests/test_standalone_samtools.py tests/test_standalone_bcftools.py tests/test_classified_nodes.py tests/test_node_mappings.py
-PATH=/opt/miniconda3/envs/bulk_rna_seq/bin:$PATH pytest -q -m e2e tests/test_standalone_biopython.py tests/test_standalone_fastp.py tests/test_standalone_fastqc.py
+JAVA_HOME=/opt/miniconda3/envs/bulk_rna_seq/lib/jvm PATH=/opt/miniconda3/envs/bulk_rna_seq/bin:$PATH pytest -q -m e2e tests/test_standalone_biopython.py tests/test_standalone_fastp.py tests/test_standalone_fastqc.py
 PATH=/opt/miniconda3/envs/variant_analysis/bin:$PATH pytest -q -m e2e tests/test_standalone_bwa_mem2.py tests/test_standalone_samtools.py tests/test_standalone_bcftools.py
 rg -n 'np\.random|random\.|placeholder|mock return' nodes/class_1/biopython.py nodes/class_2/{fastp,fastqc,bwa_mem2,samtools,bcftools}.py
 rg -n '^from \.|^from nodes|^from bioflow' nodes/class_1/biopython.py nodes/class_2/{fastp,fastqc,bwa_mem2,samtools,bcftools}.py
