@@ -62,6 +62,13 @@ Icon = ""
 [tool.pytest.ini_options]
 pythonpath = [".", "engine/src"]
 testpaths = ["tests"]
+python_files = [
+    "test_official_data.py",
+    "test_standalone_*.py",
+    "test_classified_nodes.py",
+    "test_node_mappings.py",
+    "test_web_directory.py",
+]
 markers = [
     "e2e: runs a real library or CLI tool against immutable official data",
 ]

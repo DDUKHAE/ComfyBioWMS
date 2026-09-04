@@ -44,3 +44,4 @@ pytest -q -m e2e tests/test_standalone_bwa_mem2.py tests/test_standalone_samtool
 ```
 
 등록되지 않은 기존 `*_node.py` 파일은 이 표의 통과 범위가 아니며, 공식 데이터 E2E 전까지 사용 가능 또는 구현 완료로 간주하지 않는다.
+해당 레거시 노드와 예전 워크플로우를 전제로 한 테스트도 보존만 하며 기본 pytest 수집에서 제외한다.

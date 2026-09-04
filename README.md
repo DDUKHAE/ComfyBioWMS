@@ -48,6 +48,8 @@ pytest -q -m 'not e2e' tests/test_official_data.py tests/test_standalone_*.py te
 
 `nodes/class_1/*_node.py`와 `nodes/class_2/*_node.py`에 남은 파일은 마이그레이션 후보 소스입니다. 공식 데이터 E2E를 통과해 registry에 추가되기 전에는 검증된 노드가 아닙니다.
 
+동일하게 기존 workflow/legacy-node 테스트 파일은 보존만 하며 기본 pytest 수집 대상이 아닙니다. 새 인터페이스로 워크플로우를 다시 만들 때 공식 데이터 E2E로 교체합니다.
+
 ## License
 
 [MIT](LICENSE)
