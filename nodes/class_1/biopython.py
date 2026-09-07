@@ -16,7 +16,7 @@ def _file(value: str, label: str) -> Path:
     return path
 
 
-class BiopythonSeqIOStatsNode:
+class BiopythonSeqIOStats:
     CATEGORY = "ComfyBIO/Biopython"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "INT")
@@ -52,7 +52,7 @@ class BiopythonSeqIOStatsNode:
         return json.dumps(rows), len(rows)
 
 
-class BiopythonAlignmentStatsNode:
+class BiopythonAlignmentStats:
     CATEGORY = "ComfyBIO/Biopython"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "INT", "INT", "FLOAT")
@@ -89,17 +89,24 @@ class BiopythonAlignmentStatsNode:
 
 
 NODE_CLASS_MAPPINGS = {
-    "BiopythonSeqIOStatsNode": BiopythonSeqIOStatsNode,
-    "BiopythonAlignmentStatsNode": BiopythonAlignmentStatsNode,
+    "BiopythonSeqIOStats": BiopythonSeqIOStats,
+    "BiopythonAlignmentStats": BiopythonAlignmentStats,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "BiopythonSeqIOStatsNode": "Biopython: Sequence File Statistics",
-    "BiopythonAlignmentStatsNode": "Biopython: Alignment Statistics",
+    "BiopythonSeqIOStats": "Biopython: Sequence File Statistics",
+    "BiopythonAlignmentStats": "Biopython: Alignment Statistics",
 }
 
+
+# Backward compatibility aliases
+BiopythonSeqIOStatsNode = BiopythonSeqIOStats
+BiopythonAlignmentStatsNode = BiopythonAlignmentStats
+
 __all__ = [
+    "BiopythonSeqIOStats",
     "BiopythonSeqIOStatsNode",
+    "BiopythonAlignmentStats",
     "BiopythonAlignmentStatsNode",
     "NODE_CLASS_MAPPINGS",
     "NODE_DISPLAY_NAME_MAPPINGS",

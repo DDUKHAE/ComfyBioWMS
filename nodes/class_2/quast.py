@@ -10,23 +10,7 @@ import shlex
 import shutil
 import subprocess
 import sys
-import threading
 from pathlib import Path
-
-
-_MANAGED_OPTIONS = {
-    "-o": 1,
-    "--output-dir": 1,
-    "-r": 1,
-    "--reference": 1,
-    "-g": 1,
-    "--features": 1,
-    "-m": 1,
-    "--min-contig": 1,
-    "-t": 1,
-    "--threads": 1,
-    "--large": 0,
-}
 
 
 def _file(value: str, label: str) -> Path:
@@ -35,66 +19,25 @@ def _file(value: str, label: str) -> Path:
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
 
+def _output_dir(node_name: str, custom_dir: str = "") -> Path:
+    if custom_dir and str(custom_dir).strip():
+        out = Path(custom_dir).expanduser().resolve()
+    else:
+        try:
+            folder_paths = __import__("folder_paths")
+            base = Path(folder_paths.get_output_directory())
+        except Exception:
+            base = Path.cwd() / "ComfyUI" / "output"
+        out = base / node_name
+    return out
 
-def _filter_extra(text, managed):
-    tokens, kept, ignored = shlex.split(text), [], []
-    i = 0
-    while i < len(tokens):
-        token = tokens[i]
-        match = next(
-            (
-                flag
-                for flag in managed
-                if token == flag
-                or token.startswith(flag + "=")
-                or (
-                    len(flag) == 2
-                    and managed[flag] == 1
-                    and token.startswith(flag)
-                    and token != flag
-                )
-            ),
-            None,
-        )
-        if match:
-            ignored.append(token)
-            i += 1 + (managed[match] if token == match else 0)
-        else:
-            kept.append(token)
-            i += 1
-    return kept, ignored
 
 
 def _run(argv, cwd):
-    process = subprocess.Popen(
-        argv,
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=1,
-    )
-    stdout, stderr = [], []
-
-    def drain(pipe, target, collected):
-        for line in iter(pipe.readline, ""):
-            collected.append(line)
-            print(line, end="", file=target, flush=True)
-
-    threads = [
-        threading.Thread(target=drain, args=(process.stdout, sys.stdout, stdout)),
-        threading.Thread(target=drain, args=(process.stderr, sys.stderr, stderr)),
-    ]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-    code = process.wait()
-    if code:
-        raise RuntimeError(
-            f"quast.py exited {code}: {shlex.join(argv)}\n{''.join(stderr)}"
-        )
-    return "".join(stdout), "".join(stderr)
+    try:
+        subprocess.run(argv, cwd=str(cwd), check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"quast.py exited with code {e.returncode}: {shlex.join(argv)}") from e
 
 
 def _nonempty(path: Path, label: str) -> str:
@@ -119,7 +62,7 @@ def _validate_report_html(path: Path) -> str:
     return str(path)
 
 
-class QuastNode:
+class Quast:
     CATEGORY = "ComfyBIO/Genome Assembly"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -130,7 +73,6 @@ class QuastNode:
         return {
             "required": {
                 "assembly_fasta": ("STRING", {"default": ""}),
-                "output_dir": ("STRING", {"default": "quast_out"}),
             },
             "optional": {
                 "reference": ("STRING", {"default": ""}),
@@ -145,7 +87,7 @@ class QuastNode:
     def run(
         self,
         assembly_fasta,
-        output_dir,
+        output_dir: str = "",
         reference="",
         features="",
         min_contig=500,
@@ -163,10 +105,9 @@ class QuastNode:
                 "quast.py executable not found on PATH; install conda package quast=5.3.0"
             )
 
-        out = Path(output_dir).expanduser().resolve()
+        out = _output_dir("Quast", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        kept, ignored = _filter_extra(extra_command, _MANAGED_OPTIONS)
         if ignored:
             print(
                 f"[quast] ignored node-managed extra options: {' '.join(ignored)}",
@@ -190,7 +131,9 @@ class QuastNode:
         if large:
             argv.append("--large")
 
-        _run(argv + kept, out)
+        if extra_command.strip():
+            argv.extend(shlex.split(extra_command))
+        _run(argv, out)
 
         report_tsv = out / "report.tsv"
         report_html = out / "report.html"
@@ -201,7 +144,12 @@ class QuastNode:
         )
 
 
-NODE_CLASS_MAPPINGS = {"QuastNode": QuastNode}
-NODE_DISPLAY_NAME_MAPPINGS = {"QuastNode": "QUAST: Evaluate Assembly"}
+NODE_CLASS_MAPPINGS = {"Quast": Quast}
+NODE_DISPLAY_NAME_MAPPINGS = {"Quast": "QUAST: Evaluate Assembly"}
 
-__all__ = ["QuastNode", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+
+# Backward compatibility aliases
+QuastNode = Quast
+
+__all__ = ["Quast",
+    "QuastNode", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

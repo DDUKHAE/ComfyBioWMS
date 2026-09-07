@@ -11,29 +11,7 @@ import shlex
 import shutil
 import subprocess
 import sys
-import threading
 from pathlib import Path
-
-
-_MANAGED_OPTIONS = {
-    "-o": 1,
-    "--outdir": 1,
-    "-t": 1,
-    "--threads": 1,
-    "-c": 1,
-    "--contaminants": 1,
-    "-a": 1,
-    "--adapters": 1,
-    "-l": 1,
-    "--limits": 1,
-    "--nogroup": 0,
-    "--min_length": 1,
-    "-k": 1,
-    "--kmers": 1,
-    "-f": 1,
-    "--format": 1,
-    "--extract": 0,
-}
 
 
 def _file(value: str, label: str) -> Path:
@@ -43,62 +21,24 @@ def _file(value: str, label: str) -> Path:
     return path
 
 
-def _filter_extra(text, managed):
-    tokens, kept, ignored = shlex.split(text), [], []
-    i = 0
-    while i < len(tokens):
-        token = tokens[i]
-        match = next(
-            (
-                flag
-                for flag in managed
-                if token == flag
-                or token.startswith(flag + "=")
-                or (
-                    len(flag) == 2
-                    and managed[flag] == 1
-                    and token.startswith(flag)
-                    and token != flag
-                )
-            ),
-            None,
-        )
-        if match:
-            ignored.append(token)
-            i += 1 + (managed[match] if token == match else 0)
-        else:
-            kept.append(token)
-            i += 1
-    return kept, ignored
+def _output_dir(node_name: str, custom_dir: str = "") -> Path:
+    if custom_dir and str(custom_dir).strip():
+        out = Path(custom_dir).expanduser().resolve()
+    else:
+        try:
+            folder_paths = __import__("folder_paths")
+            base = Path(folder_paths.get_output_directory())
+        except Exception:
+            base = Path.cwd() / "ComfyUI" / "output"
+        out = base / node_name
+    return out
 
 
 def _run(argv, cwd):
-    process = subprocess.Popen(
-        argv,
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=1,
-    )
-    stdout, stderr = [], []
-
-    def drain(pipe, target, collected):
-        for line in iter(pipe.readline, ""):
-            collected.append(line)
-            print(line, end="", file=target, flush=True)
-
-    threads = [
-        threading.Thread(target=drain, args=(process.stdout, sys.stdout, stdout)),
-        threading.Thread(target=drain, args=(process.stderr, sys.stderr, stderr)),
-    ]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-    code = process.wait()
-    if code:
-        raise RuntimeError(f"FastQC exited {code}: {shlex.join(argv)}\n{''.join(stderr)}")
+    try:
+        subprocess.run(argv, cwd=str(cwd), check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"FastQC exited with code {e.returncode}: {shlex.join(argv)}") from e
 
 
 def _stem(path: Path) -> str:
@@ -112,7 +52,7 @@ def _stem(path: Path) -> str:
     return Path(name).stem
 
 
-class FastQCNode:
+class FastQC:
     CATEGORY = "ComfyBIO/Quality Control"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -123,7 +63,6 @@ class FastQCNode:
         return {
             "required": {
                 "input_file": ("STRING", {"default": ""}),
-                "output_dir": ("STRING", {"default": "fastqc"}),
             },
             "optional": {
                 "threads": ("INT", {"default": 2, "min": 1, "max": 256}),
@@ -140,7 +79,7 @@ class FastQCNode:
     def run(
         self,
         input_file,
-        output_dir,
+        output_dir: str = "",
         threads=2,
         contaminants="",
         adapters="",
@@ -165,9 +104,7 @@ class FastQCNode:
                 "FastQC executable not found on PATH; install conda package fastqc=0.12.1"
             )
 
-        out = Path(output_dir).expanduser().resolve()
-        out.mkdir(parents=True, exist_ok=True)
-        kept, ignored = _filter_extra(extra_command, _MANAGED_OPTIONS)
+        out = _output_dir("FastQC", output_dir)
         if ignored:
             print(f"[FastQC] ignored node-managed extra options: {' '.join(ignored)}", file=sys.stderr)
 
@@ -201,7 +138,12 @@ class FastQCNode:
         return str(html), str(archive)
 
 
-NODE_CLASS_MAPPINGS = {"FastQCNode": FastQCNode}
-NODE_DISPLAY_NAME_MAPPINGS = {"FastQCNode": "FastQC: Read Quality Report"}
+NODE_CLASS_MAPPINGS = {"FastQC": FastQC}
+NODE_DISPLAY_NAME_MAPPINGS = {"FastQC": "FastQC: Read Quality Report"}
 
-__all__ = ["FastQCNode", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+
+# Backward compatibility aliases
+FastQCNode = FastQC
+
+__all__ = ["FastQC",
+    "FastQCNode", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

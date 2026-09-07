@@ -10,39 +10,7 @@ import shlex
 import shutil
 import subprocess
 import sys
-import threading
 from pathlib import Path
-
-
-_MANAGED_OPTIONS = {
-    "-o": 1,
-    "--output-dir": 1,
-    "-1": 1,
-    "--pe1-1": 1,
-    "--pe-1": 1,
-    "-2": 1,
-    "--pe1-2": 1,
-    "--pe-2": 1,
-    "-s": 1,
-    "--pe1-s": 1,
-    "--pe-s": 1,
-    "--12": 1,
-    "--pe1-12": 1,
-    "--pe-12": 1,
-    "-t": 1,
-    "--threads": 1,
-    "-m": 1,
-    "--memory": 1,
-    "--careful": 0,
-    "--sc": 0,
-    "--meta": 0,
-    "--isolate": 0,
-    "--only-assembler": 0,
-    "--cov-cutoff": 1,
-    "-k": 1,
-    "--kmers": 1,
-    "--phred-offset": 1,
-}
 
 
 def _file(value: str, label: str) -> Path:
@@ -51,66 +19,25 @@ def _file(value: str, label: str) -> Path:
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
 
+def _output_dir(node_name: str, custom_dir: str = "") -> Path:
+    if custom_dir and str(custom_dir).strip():
+        out = Path(custom_dir).expanduser().resolve()
+    else:
+        try:
+            folder_paths = __import__("folder_paths")
+            base = Path(folder_paths.get_output_directory())
+        except Exception:
+            base = Path.cwd() / "ComfyUI" / "output"
+        out = base / node_name
+    return out
 
-def _filter_extra(text, managed):
-    tokens, kept, ignored = shlex.split(text), [], []
-    i = 0
-    while i < len(tokens):
-        token = tokens[i]
-        match = next(
-            (
-                flag
-                for flag in managed
-                if token == flag
-                or token.startswith(flag + "=")
-                or (
-                    len(flag) == 2
-                    and managed[flag] == 1
-                    and token.startswith(flag)
-                    and token != flag
-                )
-            ),
-            None,
-        )
-        if match:
-            ignored.append(token)
-            i += 1 + (managed[match] if token == match else 0)
-        else:
-            kept.append(token)
-            i += 1
-    return kept, ignored
 
 
 def _run(argv, cwd):
-    process = subprocess.Popen(
-        argv,
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=1,
-    )
-    stdout, stderr = [], []
-
-    def drain(pipe, target, collected):
-        for line in iter(pipe.readline, ""):
-            collected.append(line)
-            print(line, end="", file=target, flush=True)
-
-    threads = [
-        threading.Thread(target=drain, args=(process.stdout, sys.stdout, stdout)),
-        threading.Thread(target=drain, args=(process.stderr, sys.stderr, stderr)),
-    ]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-    code = process.wait()
-    if code:
-        raise RuntimeError(
-            f"spades.py exited {code}: {shlex.join(argv)}\n{''.join(stderr)}"
-        )
-    return "".join(stdout), "".join(stderr)
+    try:
+        subprocess.run(argv, cwd=str(cwd), check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"spades.py exited with code {e.returncode}: {shlex.join(argv)}") from e
 
 
 def _nonempty(path: Path, label: str) -> str:
@@ -133,7 +60,7 @@ def _validate_contigs(path: Path) -> str:
     return str(path)
 
 
-class SpadesNode:
+class Spades:
     CATEGORY = "ComfyBIO/Genome Assembly"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING")
@@ -144,7 +71,6 @@ class SpadesNode:
         return {
             "required": {
                 "read1": ("STRING", {"default": ""}),
-                "output_dir": ("STRING", {"default": "spades_out"}),
             },
             "optional": {
                 "read2": ("STRING", {"default": ""}),
@@ -166,7 +92,7 @@ class SpadesNode:
     def run(
         self,
         read1,
-        output_dir,
+        output_dir: str = "",
         read2="",
         unpaired_reads="",
         threads=16,
@@ -191,10 +117,9 @@ class SpadesNode:
                 "spades.py executable not found on PATH; install conda package spades=4.3.0"
             )
 
-        out = Path(output_dir).expanduser().resolve()
+        out = _output_dir("Spades", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        kept, ignored = _filter_extra(extra_command, _MANAGED_OPTIONS)
         if ignored:
             print(
                 f"[spades] ignored node-managed extra options: {' '.join(ignored)}",
@@ -232,7 +157,9 @@ class SpadesNode:
         if phred_offset and str(phred_offset).strip().lower() != "auto":
             argv += ["--phred-offset", str(phred_offset).strip()]
 
-        _run(argv + kept, out)
+        if extra_command.strip():
+            argv.extend(shlex.split(extra_command))
+        _run(argv, out)
 
         contigs_path = out / "contigs.fasta"
         scaffolds_path = out / "scaffolds.fasta"
@@ -250,7 +177,12 @@ class SpadesNode:
         )
 
 
-NODE_CLASS_MAPPINGS = {"SpadesNode": SpadesNode}
-NODE_DISPLAY_NAME_MAPPINGS = {"SpadesNode": "SPAdes: Assemble Genome"}
+NODE_CLASS_MAPPINGS = {"Spades": Spades}
+NODE_DISPLAY_NAME_MAPPINGS = {"Spades": "SPAdes: Assemble Genome"}
 
-__all__ = ["SpadesNode", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+
+# Backward compatibility aliases
+SpadesNode = Spades
+
+__all__ = ["Spades",
+    "SpadesNode", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

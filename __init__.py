@@ -5,7 +5,17 @@ including node class mappings, display names, and web frontend directory.
 """
 
 import logging
+import sys
 from pathlib import Path
+
+# Ensure repository root and engine/src are on sys.path for internal module resolution (e.g. bioflow runtime)
+_ROOT_DIR = Path(__file__).resolve().parent
+_ENGINE_SRC = _ROOT_DIR / "engine" / "src"
+
+if str(_ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(_ROOT_DIR))
+if str(_ENGINE_SRC) not in sys.path:
+    sys.path.insert(0, str(_ENGINE_SRC))
 
 logger = logging.getLogger("ComfyBIOWMS")
 

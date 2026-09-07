@@ -1,0 +1,115 @@
+"""Flye de novo assembler for single-molecule sequencing reads.
+
+Python packages: none
+External binaries: flye
+Galaxy wrapper: galaxyproject/tools-iuc tools/flye/
+"""
+
+import shlex
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+def _file(value: str, label: str) -> Path:
+    path = Path(value).expanduser().resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"{label} is not a file: {path}")
+    return path
+
+def _output_dir(node_name: str, custom_dir: str = "") -> Path:
+    if custom_dir and str(custom_dir).strip():
+        out = Path(custom_dir).expanduser().resolve()
+    else:
+        try:
+            folder_paths = __import__("folder_paths")
+            base = Path(folder_paths.get_output_directory())
+        except Exception:
+            base = Path.cwd() / "ComfyUI" / "output"
+        out = base / node_name
+    return out
+
+
+
+def _run(argv: list[str], cwd: Path) -> None:
+    try:
+        subprocess.run(argv, cwd=str(cwd), check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Flye exited with code {e.returncode}: {shlex.join(argv)}") from e
+
+
+class FlyeAssemble:
+    CATEGORY = "ComfyBIO/Assembly"
+    FUNCTION = "run"
+    RETURN_TYPES = ("STRING", "STRING", "STRING")
+    RETURN_NAMES = ("assembly_fasta", "assembly_gfa", "flye_log")
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "reads_file": ("STRING", {"default": ""}),
+                "read_type": (["--nano-raw", "--nano-hq", "--nano-corr", "--pacbio-hifi", "--pacbio-raw", "--pacbio-corr"], {"default": "--nano-hq"}),
+            },
+            "optional": {
+                "genome_size": ("STRING", {"default": ""}),
+                "threads": ("INT", {"default": 4, "min": 1, "max": 128}),
+                "extra_command": ("STRING", {"default": "", "multiline": True}),
+            },
+        }
+
+    def run(
+        self,
+        reads_file: str,
+        read_type: str = "--nano-hq",
+        output_dir: str = "",
+        genome_size: str = "",
+        threads: int = 4,
+        extra_command: str = "",
+    ):
+        reads_path = _file(reads_file, "Long reads file")
+
+        executable = shutil.which("flye")
+        if not executable:
+            raise RuntimeError("flye executable not found on PATH; install bioconda package flye")
+
+        out = _output_dir("FlyeAssemble", output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+
+
+        argv = [
+            executable,
+            read_type,
+            str(reads_path),
+            "--out-dir",
+            str(out),
+            "--threads",
+            str(threads),
+        ]
+        if genome_size.strip():
+            argv += ["--genome-size", genome_size.strip()]
+
+        if extra_command.strip():
+            argv.extend(shlex.split(extra_command))
+        _run(argv, out)
+
+        fasta_out = out / "assembly.fasta"
+        gfa_out = out / "assembly_graph.gfa"
+        log_out = out / "flye.log"
+
+        if not fasta_out.is_file() or fasta_out.stat().st_size == 0:
+            raise RuntimeError(f"Flye failed to produce assembly at {fasta_out}")
+
+        return (str(fasta_out), str(gfa_out) if gfa_out.is_file() else "", str(log_out) if log_out.is_file() else "")
+
+
+NODE_CLASS_MAPPINGS = {"FlyeAssemble": FlyeAssemble}
+NODE_DISPLAY_NAME_MAPPINGS = {"FlyeAssemble": "Flye: De Novo Long-read Assembler"}
+
+
+# Backward compatibility aliases
+FlyeAssembleNode = FlyeAssemble
+
+__all__ = ["FlyeAssemble",
+    "FlyeAssembleNode", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

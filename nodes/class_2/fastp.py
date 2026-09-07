@@ -11,37 +11,7 @@ import shlex
 import shutil
 import subprocess
 import sys
-import threading
 from pathlib import Path
-
-
-_MANAGED_OPTIONS = {
-    "-i": 1,
-    "--in1": 1,
-    "-I": 1,
-    "--in2": 1,
-    "-o": 1,
-    "--out1": 1,
-    "-O": 1,
-    "--out2": 1,
-    "-w": 1,
-    "--thread": 1,
-    "-q": 1,
-    "--qualified_quality_phred": 1,
-    "-u": 1,
-    "--unqualified_percent_limit": 1,
-    "-n": 1,
-    "--n_base_limit": 1,
-    "-l": 1,
-    "--length_required": 1,
-    "--detect_adapter_for_pe": 0,
-    "-c": 0,
-    "--correction": 0,
-    "-j": 1,
-    "--json": 1,
-    "-h": 1,
-    "--html": 1,
-}
 
 
 def _file(value: str, label: str) -> Path:
@@ -50,64 +20,25 @@ def _file(value: str, label: str) -> Path:
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
 
+def _output_dir(node_name: str, custom_dir: str = "") -> Path:
+    if custom_dir and str(custom_dir).strip():
+        out = Path(custom_dir).expanduser().resolve()
+    else:
+        try:
+            folder_paths = __import__("folder_paths")
+            base = Path(folder_paths.get_output_directory())
+        except Exception:
+            base = Path.cwd() / "ComfyUI" / "output"
+        out = base / node_name
+    return out
 
-def _filter_extra(text, managed):
-    tokens, kept, ignored = shlex.split(text), [], []
-    i = 0
-    while i < len(tokens):
-        token = tokens[i]
-        match = next(
-            (
-                flag
-                for flag in managed
-                if token == flag
-                or token.startswith(flag + "=")
-                or (
-                    len(flag) == 2
-                    and managed[flag] == 1
-                    and token.startswith(flag)
-                    and token != flag
-                )
-            ),
-            None,
-        )
-        if match:
-            ignored.append(token)
-            i += 1 + (managed[match] if token == match else 0)
-        else:
-            kept.append(token)
-            i += 1
-    return kept, ignored
 
 
 def _run(argv, cwd):
-    process = subprocess.Popen(
-        argv,
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=1,
-    )
-    stdout, stderr = [], []
-
-    def drain(pipe, target, collected):
-        for line in iter(pipe.readline, ""):
-            collected.append(line)
-            print(line, end="", file=target, flush=True)
-
-    threads = [
-        threading.Thread(target=drain, args=(process.stdout, sys.stdout, stdout)),
-        threading.Thread(target=drain, args=(process.stderr, sys.stderr, stderr)),
-    ]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-    code = process.wait()
-    if code:
-        raise RuntimeError(f"fastp exited {code}: {shlex.join(argv)}\n{''.join(stderr)}")
-    return "".join(stdout), "".join(stderr)
+    try:
+        subprocess.run(argv, cwd=str(cwd), check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"fastp exited with code {e.returncode}: {shlex.join(argv)}") from e
 
 
 def _nonempty(path: Path, label: str) -> str:
@@ -116,7 +47,7 @@ def _nonempty(path: Path, label: str) -> str:
     return str(path)
 
 
-class FastpNode:
+class Fastp:
     CATEGORY = "ComfyBIO/Read Preprocessing"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING")
@@ -127,7 +58,6 @@ class FastpNode:
         return {
             "required": {
                 "read1": ("STRING", {"default": ""}),
-                "output_dir": ("STRING", {"default": "fastp"}),
             },
             "optional": {
                 "read2": ("STRING", {"default": ""}),
@@ -151,7 +81,7 @@ class FastpNode:
     def run(
         self,
         read1,
-        output_dir,
+        output_dir: str = "",
         read2="",
         threads=4,
         qualified_quality_phred=15,
@@ -170,13 +100,12 @@ class FastpNode:
                 "fastp executable not found on PATH; install conda package fastp=1.3.6"
             )
 
-        out = Path(output_dir).expanduser().resolve()
+        out = _output_dir("Fastp", output_dir)
         out.mkdir(parents=True, exist_ok=True)
         out1 = out / "R1.fastq.gz"
         out2 = out / "R2.fastq.gz"
         report_json = out / "fastp.json"
         report_html = out / "fastp.html"
-        kept, ignored = _filter_extra(extra_command, _MANAGED_OPTIONS)
         if ignored:
             print(f"[fastp] ignored node-managed extra options: {' '.join(ignored)}", file=sys.stderr)
 
@@ -207,7 +136,9 @@ class FastpNode:
             argv.append("--detect_adapter_for_pe")
         if correction:
             argv.append("--correction")
-        _run(argv + kept, out)
+        if extra_command.strip():
+            argv.extend(shlex.split(extra_command))
+        _run(argv, out)
 
         json.loads(report_json.read_text())
         return (
@@ -218,7 +149,12 @@ class FastpNode:
         )
 
 
-NODE_CLASS_MAPPINGS = {"FastpNode": FastpNode}
-NODE_DISPLAY_NAME_MAPPINGS = {"FastpNode": "fastp: Trim and QC Reads"}
+NODE_CLASS_MAPPINGS = {"Fastp": Fastp}
+NODE_DISPLAY_NAME_MAPPINGS = {"Fastp": "fastp: Trim and QC Reads"}
 
-__all__ = ["FastpNode", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+
+# Backward compatibility aliases
+FastpNode = Fastp
+
+__all__ = ["Fastp",
+    "FastpNode", "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

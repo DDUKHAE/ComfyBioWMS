@@ -12,13 +12,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import threading
 from pathlib import Path
 
-
-_SORT_MANAGED = {"-@": 1, "-m": 1, "-n": 0, "-N": 0, "-o": 1, "-O": 1}
-_INDEX_MANAGED = {"-@": 1, "-b": 0, "-c": 0, "-o": 1}
-_MARKDUP_MANAGED = {"-@": 1, "-r": 0, "--mode": 1, "-d": 1, "-f": 1}
 
 
 def _file(value, label):
@@ -26,6 +21,19 @@ def _file(value, label):
     if not path.is_file():
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
+
+def _output_dir(node_name: str, custom_dir: str = "") -> Path:
+    if custom_dir and str(custom_dir).strip():
+        out = Path(custom_dir).expanduser().resolve()
+    else:
+        try:
+            folder_paths = __import__("folder_paths")
+            base = Path(folder_paths.get_output_directory())
+        except Exception:
+            base = Path.cwd() / "ComfyUI" / "output"
+        out = base / node_name
+    return out
+
 
 
 def _executable():
@@ -37,78 +45,17 @@ def _executable():
     return executable
 
 
-def _filter_extra(text, managed):
-    tokens, kept, ignored = shlex.split(text), [], []
-    i = 0
-    while i < len(tokens):
-        token = tokens[i]
-        match = next(
-            (
-                flag
-                for flag in managed
-                if token == flag
-                or token.startswith(flag + "=")
-                or (
-                    len(flag) == 2
-                    and managed[flag] == 1
-                    and token.startswith(flag)
-                    and token != flag
-                )
-            ),
-            None,
-        )
-        if match:
-            ignored.append(token)
-            i += 1 + (managed[match] if token == match else 0)
-        else:
-            kept.append(token)
-            i += 1
-    return kept, ignored
-
-
 def _run(argv, cwd, partial=None):
-    process = subprocess.Popen(
-        argv,
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=1,
-    )
-    stdout, stderr = [], []
-
-    def drain(pipe, target, collected):
-        for line in iter(pipe.readline, ""):
-            collected.append(line)
-            print(line, end="", file=target, flush=True)
-
-    threads = [
-        threading.Thread(target=drain, args=(process.stdout, sys.stdout, stdout)),
-        threading.Thread(target=drain, args=(process.stderr, sys.stderr, stderr)),
-    ]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-    code = process.wait()
-    if code:
+    try:
+        subprocess.run(argv, cwd=cwd, check=True)
+    except subprocess.CalledProcessError as e:
         if partial:
             Path(partial).unlink(missing_ok=True)
-        raise RuntimeError(f"samtools exited {code}: {shlex.join(argv)}\n{''.join(stderr)}")
-    return "".join(stdout)
+        raise RuntimeError(f"samtools exited {e.returncode}: {shlex.join(argv)}") from e
+    return ""
 
 
-def _extras(text, managed, command):
-    kept, ignored = _filter_extra(text, managed)
-    if ignored:
-        print(
-            f"[samtools {command}] ignored node-managed extra options: {' '.join(ignored)}",
-            file=sys.stderr,
-        )
-    return kept
-
-
-class SamtoolsSortNode:
+class SamtoolsSort:
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -119,7 +66,6 @@ class SamtoolsSortNode:
         return {
             "required": {
                 "input_alignment": ("STRING", {"default": ""}),
-                "output_bam": ("STRING", {"default": "alignment/sorted.bam"}),
             },
             "optional": {
                 "threads": ("INT", {"default": 1, "min": 1, "max": 256}),
@@ -129,23 +75,25 @@ class SamtoolsSortNode:
             },
         }
 
-    def run(self, input_alignment, output_bam, threads=1, sort_order="coordinate", memory_per_thread="768M", extra_command=""):
+    def run(self, input_alignment, output_bam: str = "", threads=1, sort_order="coordinate", memory_per_thread="768M", extra_command=""):
         source = _file(input_alignment, "Input alignment")
         executable = _executable()
-        output = Path(output_bam).expanduser().resolve()
+        output = Path(output_bam).expanduser().resolve() if (output_bam and str(output_bam).strip()) else (_output_dir("SamtoolsSort") / f"{_stem(source)}.sorted.bam")
         output.parent.mkdir(parents=True, exist_ok=True)
         argv = [executable, "sort", "-@", str(threads), "-m", memory_per_thread, "-O", "BAM", "-o", str(output)]
         if sort_order == "name":
             argv.append("-n")
         elif sort_order == "lexicographical":
             argv.append("-N")
-        argv += _extras(extra_command, _SORT_MANAGED, "sort") + [str(source)]
+        if extra_command.strip():
+            argv.extend(shlex.split(extra_command))
+        argv.append(str(source))
         _run(argv, output.parent, output)
         _run([executable, "quickcheck", str(output)], output.parent)
         return (str(output),)
 
 
-class SamtoolsIndexNode:
+class SamtoolsIndex:
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -156,7 +104,6 @@ class SamtoolsIndexNode:
         return {
             "required": {"input_bam": ("STRING", {"default": ""})},
             "optional": {
-                "output_index": ("STRING", {"default": ""}),
                 "threads": ("INT", {"default": 1, "min": 1, "max": 256}),
                 "index_format": (["bai", "csi"], {"default": "bai"}),
                 "extra_command": ("STRING", {"default": "", "multiline": True}),
@@ -169,7 +116,9 @@ class SamtoolsIndexNode:
         output = Path(output_index).expanduser().resolve() if output_index else Path(str(source) + (".csi" if index_format == "csi" else ".bai")).resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         argv = [executable, "index", "-@", str(threads), "-c" if index_format == "csi" else "-b", "-o", str(output)]
-        argv += _extras(extra_command, _INDEX_MANAGED, "index") + [str(source)]
+        if extra_command.strip():
+            argv.extend(shlex.split(extra_command))
+        argv.append(str(source))
         _run(argv, output.parent, output)
         if not output.is_file() or output.stat().st_size == 0:
             raise RuntimeError(f"samtools did not create a nonempty index: {output}")
@@ -177,7 +126,7 @@ class SamtoolsIndexNode:
         return (str(output),)
 
 
-class SamtoolsMarkdupNode:
+class SamtoolsMarkdup:
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -188,7 +137,6 @@ class SamtoolsMarkdupNode:
         return {
             "required": {
                 "input_bam": ("STRING", {"default": ""}),
-                "output_bam": ("STRING", {"default": "alignment/marked.bam"}),
             },
             "optional": {
                 "threads": ("INT", {"default": 1, "min": 1, "max": 256}),
@@ -199,12 +147,12 @@ class SamtoolsMarkdupNode:
             },
         }
 
-    def run(self, input_bam, output_bam, threads=1, remove_duplicates=False, mode="template", optical_distance=100, extra_command=""):
+    def run(self, input_bam, output_bam: str = "", threads=1, remove_duplicates=False, mode="template", optical_distance=100, extra_command=""):
         source = _file(input_bam, "Input BAM")
         executable = _executable()
-        output = Path(output_bam).expanduser().resolve()
+        output = Path(output_bam).expanduser().resolve() if (output_bam and str(output_bam).strip()) else (_output_dir("SamtoolsMarkdup") / f"{_stem(source)}.markdup.bam")
         output.parent.mkdir(parents=True, exist_ok=True)
-        extra = _extras(extra_command, _MARKDUP_MANAGED, "markdup")
+        extra = shlex.split(extra_command) if extra_command.strip() else []
         with tempfile.TemporaryDirectory(dir=output.parent) as temporary:
             temporary = Path(temporary)
             namesort = temporary / "namesort.bam"
@@ -223,14 +171,20 @@ class SamtoolsMarkdupNode:
 
 
 NODE_CLASS_MAPPINGS = {
-    "SamtoolsSortNode": SamtoolsSortNode,
-    "SamtoolsIndexNode": SamtoolsIndexNode,
-    "SamtoolsMarkdupNode": SamtoolsMarkdupNode,
+    "SamtoolsSort": SamtoolsSort,
+    "SamtoolsIndex": SamtoolsIndex,
+    "SamtoolsMarkdup": SamtoolsMarkdup,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SamtoolsSortNode": "samtools: Sort Alignment",
-    "SamtoolsIndexNode": "samtools: Index Alignment",
-    "SamtoolsMarkdupNode": "samtools: Mark Duplicates",
+    "SamtoolsSort": "samtools: Sort Alignment",
+    "SamtoolsIndex": "samtools: Index Alignment",
+    "SamtoolsMarkdup": "samtools: Mark Duplicates",
 }
+
+
+# Backward compatibility aliases
+SamtoolsSortNode = SamtoolsSort
+SamtoolsIndexNode = SamtoolsIndex
+SamtoolsMarkdupNode = SamtoolsMarkdup
 
 __all__ = [*NODE_CLASS_MAPPINGS, "NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

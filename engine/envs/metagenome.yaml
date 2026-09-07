@@ -4,7 +4,7 @@ channels:
   - bioconda
 dependencies:
   - python>=3.11
-  - fastp
-  - kraken2
-  - bracken
-  - matplotlib
+  - fastp=1.3.6
+  - kraken2=2.17.1
+  - bracken=1.0.0
+  - matplotlib>=3.7.0

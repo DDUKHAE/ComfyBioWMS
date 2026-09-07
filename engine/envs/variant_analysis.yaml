@@ -4,7 +4,7 @@ channels:
   - bioconda
 dependencies:
   - python>=3.11
-  - bwa-mem2
-  - samtools
-  - bcftools
-  - matplotlib
+  - bwa-mem2=2.3
+  - samtools=1.24
+  - bcftools=1.24
+  - matplotlib>=3.7.0

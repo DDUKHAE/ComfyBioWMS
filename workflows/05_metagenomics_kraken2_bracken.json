@@ -1,0 +1,207 @@
+{
+  "last_node_id": 4,
+  "last_link_id": 3,
+  "version": 0.4,
+  "config": {},
+  "extra": {},
+  "groups": [],
+  "metadata": {
+    "format": "comfyui_workflow_export",
+    "route_id": "metagenomics_kraken2_bracken",
+    "domain": "metagenome",
+    "title": "ZymoBIOMICS Metagenomics Taxonomic Profiling",
+    "description": "Metagenomics Golden Benchmark: Fastp Trimming, Kraken2 Exact K-mer Classification, and Bracken Bayesian Abundance Re-estimation."
+  },
+  "nodes": [
+    {
+      "id": 1,
+      "type": "SampleMetadataValidatorNode",
+      "pos": [
+        100,
+        150
+      ],
+      "size": [
+        340,
+        160
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "sample_metadata_csv",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SampleMetadataValidatorNode"
+      },
+      "widgets_values": [
+        "data/metagenome_zymo",
+        "data/metagenome_zymo/kraken2_db/testdb-kraken2",
+        "data/metagenome_zymo/sample_metadata.csv",
+        ""
+      ]
+    },
+    {
+      "id": 2,
+      "type": "FastpTrimNode",
+      "pos": [
+        480,
+        150
+      ],
+      "size": [
+        340,
+        180
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "sample_metadata_csv",
+          "type": "STRING",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "trimmed_fastq_dir",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FastpTrimNode"
+      },
+      "widgets_values": [
+        "data/metagenome_zymo",
+        "data/metagenome_zymo/sample_metadata.csv",
+        "results/test_metagenome/trimmed",
+        4,
+        ""
+      ]
+    },
+    {
+      "id": 3,
+      "type": "Kraken2ClassifyNode",
+      "pos": [
+        860,
+        150
+      ],
+      "size": [
+        340,
+        200
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "trimmed_fastq_dir",
+          "type": "STRING",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "kraken2_output_dir",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Kraken2ClassifyNode"
+      },
+      "widgets_values": [
+        "data/metagenome_zymo",
+        "data/metagenome_zymo/sample_metadata.csv",
+        "results/test_metagenome/trimmed",
+        "data/metagenome_zymo/kraken2_db/testdb-kraken2",
+        "results/test_metagenome/kraken2",
+        4,
+        0.0,
+        ""
+      ]
+    },
+    {
+      "id": 4,
+      "type": "BrackenAbundanceNode",
+      "pos": [
+        1240,
+        150
+      ],
+      "size": [
+        340,
+        180
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "kraken2_output_dir",
+          "type": "STRING",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "bracken_dir",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BrackenAbundanceNode"
+      },
+      "widgets_values": [
+        "results/test_metagenome/kraken2",
+        "data/metagenome_zymo/kraken2_db/testdb-kraken2",
+        "results/test_metagenome/bracken",
+        100,
+        "S",
+        1,
+        ""
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "STRING"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "STRING"
+    ]
+  ]
+}
