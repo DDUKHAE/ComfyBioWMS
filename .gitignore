@@ -62,7 +62,7 @@ dist/
 
 # Data & Test results
 data/
-results/
+results/ß
 plots/
 *.tar.gz
 *.k2d
@@ -72,3 +72,12 @@ plots/
 paper_platform/benchmarks/results/
 paper_platform/benchmarks/results_cli/
 paper_platform/benchmarks/data/
+
+# Never push
+manuscript.md
+manuscript.docx
+plots/
+docs/
+tests/
+results/
+data/

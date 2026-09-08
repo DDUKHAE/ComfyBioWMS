@@ -40,6 +40,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class RSeQCGeneBodyCoverage:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Quality Control"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -88,6 +90,8 @@ class RSeQCGeneBodyCoverage:
 
 
 class RSeQCJunctionSaturation:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Quality Control"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -132,6 +136,8 @@ class RSeQCJunctionSaturation:
 
 
 class RSeQCInferExperiment:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Quality Control"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)

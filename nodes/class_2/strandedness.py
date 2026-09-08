@@ -11,6 +11,16 @@ import shutil
 import subprocess
 from pathlib import Path
 
+try:
+    from .common import discover_samples
+except Exception:
+    try:
+        from nodes.class_2.common import discover_samples
+    except Exception:
+        def discover_samples(fwd_input: str, rev_input: str = ""):
+            p = Path(fwd_input).expanduser().resolve()
+            return [(p.stem, p, Path(rev_input).expanduser().resolve() if rev_input.strip() else None)]
+
 
 def _file(value: str, label: str) -> Path:
     path = Path(value).expanduser().resolve()
@@ -58,6 +68,8 @@ def _subsample_fastq(in_path: Path, out_path: Path, max_reads: int) -> None:
 
 
 class InferStrandedness:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Preprocessing"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -89,8 +101,8 @@ class InferStrandedness:
         extra_command: str = "",
     ):
         idx_dir = _dir(salmon_index_dir, "Salmon Index")
-        fwd_path = _file(reads_fwd, "Forward reads FASTQ")
-        rev_path = _file(reads_rev, "Reverse reads FASTQ") if reads_rev.strip() else None
+        samples = discover_samples(reads_fwd, reads_rev)
+        _, fwd_path, rev_path = samples[0]
 
         executable = shutil.which("salmon")
         if not executable:

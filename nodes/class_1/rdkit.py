@@ -8,6 +8,8 @@ import json
 
 
 class RDKitDescriptor:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/CADD"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "FLOAT", "FLOAT", "FLOAT", "INT")

@@ -40,6 +40,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class UmiToolsExtract:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Preprocessing"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING")
@@ -80,8 +82,6 @@ class UmiToolsExtract:
         out = _output_dir("UmiToolsExtract", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[UMI-tools] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         fwd_out = out / f"umi_extracted_{fwd_path.name}"
         log_file = out / "umi_extract.log"
@@ -116,6 +116,8 @@ class UmiToolsExtract:
 
 
 class UmiToolsDedup:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -153,8 +155,6 @@ class UmiToolsDedup:
         out = _output_dir("UmiToolsDedup", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[UMI-tools] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         dedup_bam = out / f"dedup_{bam_path.name}"
         log_file = out / "umi_dedup.log"

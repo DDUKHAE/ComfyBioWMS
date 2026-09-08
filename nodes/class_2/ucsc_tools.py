@@ -52,6 +52,8 @@ def _sort_bedgraph_if_needed(in_bg: Path, sorted_bg: Path) -> None:
 
 
 class BedGraphToBigWig:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Visualization"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)

@@ -63,6 +63,8 @@ def _validate_report_html(path: Path) -> str:
 
 
 class Quast:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Genome Assembly"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -108,11 +110,6 @@ class Quast:
         out = _output_dir("Quast", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(
-                f"[quast] ignored node-managed extra options: {' '.join(ignored)}",
-                file=sys.stderr,
-            )
 
         argv = [
             executable,

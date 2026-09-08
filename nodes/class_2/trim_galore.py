@@ -1,5 +1,8 @@
 """Trim Galore! quality and adapter trimming node.
 
+Supports single FASTQ file inputs as well as directory inputs (or comma-separated paths)
+to automatically discover and process multiple sample pairs/singles iteratively in a single node.
+
 Python packages: none
 External binaries: trim_galore, cutadapt, (optional: fastqc)
 Galaxy wrapper: galaxyproject/tools-iuc tools/trim_galore/trim_galore.xml
@@ -11,11 +14,24 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    from .common import discover_samples
+except Exception:
+    try:
+        from nodes.class_2.common import discover_samples
+    except Exception:
+        import re
+        def discover_samples(fwd_input: str, rev_input: str = ""):
+            p = Path(fwd_input).expanduser().resolve()
+            return [(p.stem, p, Path(rev_input).expanduser().resolve() if rev_input.strip() else None)]
+
+
 def _file(value: str, label: str) -> Path:
     path = Path(value).expanduser().resolve()
     if not path.is_file():
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
+
 
 def _output_dir(node_name: str, custom_dir: str = "") -> Path:
     if custom_dir and str(custom_dir).strip():
@@ -30,7 +46,6 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
     return out
 
 
-
 def _run(argv: list[str], cwd: Path) -> None:
     try:
         subprocess.run(argv, cwd=str(cwd), check=True)
@@ -39,6 +54,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class TrimGalore:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Preprocessing"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING")
@@ -75,8 +92,7 @@ class TrimGalore:
         cores: int = 2,
         extra_command: str = "",
     ):
-        fwd_path = _file(reads_fwd, "Forward reads FASTQ")
-        rev_path = _file(reads_rev, "Reverse reads FASTQ") if reads_rev.strip() else None
+        samples = discover_samples(reads_fwd, reads_rev)
 
         executable = shutil.which("trim_galore")
         if not executable:
@@ -84,56 +100,66 @@ class TrimGalore:
                 "Trim Galore! executable not found on PATH; install bioconda package trim-galore"
             )
 
-        out = _output_dir("TrimGalore", output_dir)
-        out.mkdir(parents=True, exist_ok=True)
+        base_out = _output_dir("TrimGalore", output_dir)
+        base_out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[TrimGalore] ignored node-managed extra options: {' '.join(ignored)}", file=sys.stderr)
+        is_single = len(samples) == 1 and Path(reads_fwd.strip()).is_file()
+        fwd_results, rev_results, report_results = [], [], []
 
-        argv = [
-            executable,
-            "--output_dir", str(out),
-            "--quality", str(quality),
-            "--stringency", str(stringency),
-            "--length", str(min_length),
-            "--cores", str(cores),
-        ]
-        if adapter.strip():
-            argv.extend(["--adapter", adapter.strip()])
-        if adapter2.strip():
-            argv.extend(["--adapter2", adapter2.strip()])
+        for sample_id, fwd_path, rev_path in samples:
+            sample_out = base_out if is_single else (base_out / sample_id)
+            sample_out.mkdir(parents=True, exist_ok=True)
 
-        if rev_path:
-            argv.extend(["--paired", str(fwd_path), str(rev_path)])
-        else:
-            argv.append(str(fwd_path))
+            argv = [
+                executable,
+                "--output_dir", str(sample_out),
+                "--quality", str(quality),
+                "--stringency", str(stringency),
+                "--length", str(min_length),
+                "--cores", str(cores),
+            ]
+            if adapter.strip():
+                argv.extend(["--adapter", adapter.strip()])
+            if adapter2.strip():
+                argv.extend(["--adapter2", adapter2.strip()])
 
-        if extra_command.strip():
-            argv.extend(shlex.split(extra_command))
-        _run(argv, out)
+            if rev_path:
+                argv.extend(["--paired", str(fwd_path), str(rev_path)])
+            else:
+                argv.append(str(fwd_path))
 
-        report = next(out.glob("*trimming_report.txt"), None)
-        report_file = str(report) if report else ""
+            if extra_command.strip():
+                argv.extend(shlex.split(extra_command))
+            _run(argv, sample_out)
 
-        def _get_output(*patterns: str, err_msg: str) -> str:
-            matched = [p for pat in patterns for p in out.glob(pat)]
-            if not matched:
-                raise RuntimeError(err_msg)
-            if matched[0].stat().st_size == 0:
-                raise RuntimeError("Trim Galore! produced empty trimmed fastq output")
-            return str(matched[0])
+            report = next(sample_out.glob("*trimming_report.txt"), None)
+            report_file = str(report) if report else ""
 
-        if rev_path:
-            err = "Trim Galore! did not generate paired output fastq files"
-            fwd = _get_output("*_val_1.fq*", "*_val_1.fastq*", err_msg=err)
-            rev = _get_output("*_val_2.fq*", "*_val_2.fastq*", err_msg=err)
-            return fwd, rev, report_file
+            def _get_output(*patterns: str, err_msg: str) -> str:
+                matched = [p for pat in patterns for p in sample_out.glob(pat)]
+                if not matched:
+                    raise RuntimeError(err_msg)
+                if matched[0].stat().st_size == 0:
+                    raise RuntimeError("Trim Galore! produced empty trimmed fastq output")
+                return str(matched[0])
 
-        fwd = _get_output(
-            "*_trimmed.fq*", "*_trimmed.fastq*", "*_val_1.fq*",
-            err_msg="Trim Galore! did not generate trimmed fastq output",
-        )
-        return fwd, "", report_file
+            if rev_path:
+                err = f"Trim Galore! did not generate paired output fastq files for {sample_id}"
+                fwd = _get_output("*_val_1.fq*", "*_val_1.fastq*", err_msg=err)
+                rev = _get_output("*_val_2.fq*", "*_val_2.fastq*", err_msg=err)
+                fwd_results.append(fwd)
+                rev_results.append(rev)
+            else:
+                err = f"Trim Galore! did not generate trimmed fastq output for {sample_id}"
+                fwd = _get_output("*_trimmed.fq*", "*_trimmed.fastq*", "*_val_1.fq*", err_msg=err)
+                fwd_results.append(fwd)
+
+            if report_file:
+                report_results.append(report_file)
+
+        if is_single:
+            return fwd_results[0], (rev_results[0] if rev_results else ""), (report_results[0] if report_results else "")
+        return ",".join(fwd_results), ",".join(rev_results), ",".join(report_results)
 
 
 NODE_CLASS_MAPPINGS = {"TrimGalore": TrimGalore}

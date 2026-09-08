@@ -61,6 +61,8 @@ def _validate(executable, output):
 
 
 class BcftoolsMpileup:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Variants"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -99,6 +101,8 @@ class BcftoolsMpileup:
 
 
 class BcftoolsCall:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Variants"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -139,6 +143,8 @@ class BcftoolsCall:
 
 
 class BcftoolsFilter:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Variants"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)

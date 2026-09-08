@@ -40,6 +40,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class FlyeAssemble:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Assembly"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING")

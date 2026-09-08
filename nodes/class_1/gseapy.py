@@ -29,6 +29,8 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
 
 
 class GSEAPathway:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Pathways"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")

@@ -40,6 +40,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class PicardMarkDuplicates:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -75,8 +77,6 @@ class PicardMarkDuplicates:
         out = _output_dir("PicardMarkDuplicates", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[Picard] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         marked_bam = out / f"markdup_{bam_path.name}"
         metrics_file = out / f"{bam_path.stem}_markdup_metrics.txt"

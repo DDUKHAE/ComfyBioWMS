@@ -63,11 +63,14 @@ Icon = ""
 pythonpath = [".", "engine/src"]
 testpaths = ["tests"]
 python_files = [
-    "test_official_data.py",
-    "test_standalone_*.py",
-    "test_classified_nodes.py",
-    "test_node_mappings.py",
-    "test_web_directory.py",
+    "test_execution_contract.py",
+    "test_native_concordance.py",
+    "test_comfyui_integration.py",
+    "test_final_case_study_workflows.py",
+    "test_standalone_batch_samples.py",
+    "test_standalone_biopython.py",
+    "test_standalone_deseq2.py",
+    "test_standalone_plots.py",
 ]
 markers = [
     "e2e: runs a real library or CLI tool against immutable official data",

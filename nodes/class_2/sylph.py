@@ -39,6 +39,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class SylphProfile:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Metagenomics"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -78,8 +80,6 @@ class SylphProfile:
         out = _output_dir("SylphProfile", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[Sylph] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         out_tsv = out / f"{fwd_path.stem}_sylph_profile.tsv"
 

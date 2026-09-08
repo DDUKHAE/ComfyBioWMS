@@ -7,6 +7,12 @@ External binaries: none
 import json
 from pathlib import Path
 
+try:
+    from nodes.compat import ensure_pandas_compat
+    ensure_pandas_compat()
+except Exception:
+    pass
+
 
 def _file(value: str, label: str) -> Path:
     path = Path(value).expanduser().resolve()
@@ -16,6 +22,8 @@ def _file(value: str, label: str) -> Path:
 
 
 class AnnDataInspect:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Single-Cell"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "INT", "INT")

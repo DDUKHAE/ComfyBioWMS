@@ -40,6 +40,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class SortMeRNA:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Preprocessing"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING")
@@ -81,8 +83,6 @@ class SortMeRNA:
         out = _output_dir("SortMeRNA", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[SortMeRNA] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         aligned_prefix = str(out / "rrna_aligned")
         other_prefix = str(out / "non_rrna")

@@ -40,6 +40,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class Prokka:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Microbiome"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING")

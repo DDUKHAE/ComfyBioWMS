@@ -1,14 +1,27 @@
-"""Trimmomatic flexible read trimming node.
+"""Trimmomatic read trimming node.
+
+Supports single FASTQ file inputs as well as directory inputs (or comma-separated paths)
+to automatically discover and process multiple sample pairs/singles iteratively in a single node.
 
 Python packages: none
 External binaries: trimmomatic
-Galaxy wrapper: galaxyproject/tools-iuc tools/trimmomatic/
 """
 
 import shlex
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
+try:
+    from .common import discover_samples
+except Exception:
+    try:
+        from nodes.class_2.common import discover_samples
+    except Exception:
+        def discover_samples(fwd_input: str, rev_input: str = ""):
+            p = Path(fwd_input).expanduser().resolve()
+            return [(p.stem, p, Path(rev_input).expanduser().resolve() if rev_input.strip() else None)]
 
 
 def _file(value: str, label: str) -> Path:
@@ -16,6 +29,7 @@ def _file(value: str, label: str) -> Path:
     if not path.is_file():
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
+
 
 def _output_dir(node_name: str, custom_dir: str = "") -> Path:
     if custom_dir and str(custom_dir).strip():
@@ -30,12 +44,13 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
     return out
 
 
-
 class Trimmomatic:
-    CATEGORY = "ComfyBIO/Preprocessing"
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
+    CATEGORY = "ComfyBIO/Read Preprocessing"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
-    RETURN_NAMES = ("trimmed_fwd", "trimmed_rev")
+    RETURN_NAMES = ("trimmed_reads_fwd", "trimmed_reads_rev")
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -45,10 +60,10 @@ class Trimmomatic:
             },
             "optional": {
                 "reads_rev": ("STRING", {"default": ""}),
-                "leading": ("INT", {"default": 3, "min": 0, "max": 50}),
-                "trailing": ("INT", {"default": 3, "min": 0, "max": 50}),
-                "minlen": ("INT", {"default": 36, "min": 1, "max": 500}),
                 "threads": ("INT", {"default": 4, "min": 1, "max": 128}),
+                "leading": ("INT", {"default": 3, "min": 0, "max": 40}),
+                "trailing": ("INT", {"default": 3, "min": 0, "max": 40}),
+                "minlen": ("INT", {"default": 36, "min": 1, "max": 1000}),
                 "extra_command": ("STRING", {"default": "", "multiline": True}),
             },
         }
@@ -58,48 +73,60 @@ class Trimmomatic:
         reads_fwd: str,
         output_dir: str = "",
         reads_rev: str = "",
+        threads: int = 4,
         leading: int = 3,
         trailing: int = 3,
         minlen: int = 36,
-        threads: int = 4,
         extra_command: str = "",
     ):
-        fwd_path = _file(reads_fwd, "Forward reads FASTQ")
-        rev_path = _file(reads_rev, "Reverse reads FASTQ") if reads_rev.strip() else None
+        samples = discover_samples(reads_fwd, reads_rev)
 
         executable = shutil.which("trimmomatic")
         if not executable:
             raise RuntimeError("trimmomatic executable not found on PATH; install bioconda package trimmomatic")
 
-        out = _output_dir("Trimmomatic", output_dir)
-        out.mkdir(parents=True, exist_ok=True)
+        base_out = _output_dir("Trimmomatic", output_dir)
+        base_out.mkdir(parents=True, exist_ok=True)
 
-        paired = bool(rev_path)
-        mode = "PE" if paired else "SE"
+        is_single = len(samples) == 1 and Path(str(reads_fwd).strip()).is_file()
+        fwd_list, rev_list = [], []
 
-        out_fwd = out / f"{fwd_path.stem}_trimmed.fq.gz"
-        out_fwd_unpaired = out / f"{fwd_path.stem}_unpaired.fq.gz"
-        out_rev = out / f"{rev_path.stem}_trimmed.fq.gz" if paired else None
-        out_rev_unpaired = out / f"{rev_path.stem}_unpaired.fq.gz" if paired else None
+        for sample_id, fwd_path, rev_path in samples:
+            sample_out = base_out if is_single else (base_out / sample_id)
+            sample_out.mkdir(parents=True, exist_ok=True)
 
-        argv = [executable, mode, "-threads", str(threads)]
-        if paired:
-            argv += [str(fwd_path), str(rev_path), str(out_fwd), str(out_fwd_unpaired), str(out_rev), str(out_rev_unpaired)]
-        else:
-            argv += [str(fwd_path), str(out_fwd)]
+            paired = bool(rev_path)
+            mode = "PE" if paired else "SE"
 
-        argv += [f"LEADING:{leading}", f"TRAILING:{trailing}", f"MINLEN:{minlen}"]
-        if extra_command.strip():
-            argv += shlex.split(extra_command.strip())
+            out_fwd = sample_out / f"{sample_id}_trimmed_R1.fq.gz"
+            out_fwd_unpaired = sample_out / f"{sample_id}_unpaired_R1.fq.gz"
+            out_rev = sample_out / f"{sample_id}_trimmed_R2.fq.gz" if paired else None
+            out_rev_unpaired = sample_out / f"{sample_id}_unpaired_R2.fq.gz" if paired else None
 
-        proc = subprocess.run(argv, capture_output=True, text=True)
-        if proc.returncode != 0:
-            raise RuntimeError(f"Trimmomatic failed ({proc.returncode}): {proc.stderr}")
+            argv = [executable, mode, "-threads", str(threads)]
+            if paired:
+                argv += [str(fwd_path), str(rev_path), str(out_fwd), str(out_fwd_unpaired), str(out_rev), str(out_rev_unpaired)]
+            else:
+                argv += [str(fwd_path), str(out_fwd)]
 
-        if not out_fwd.is_file() or out_fwd.stat().st_size == 0:
-            raise RuntimeError(f"Trimmomatic failed to produce output at {out_fwd}")
+            argv += [f"LEADING:{leading}", f"TRAILING:{trailing}", f"MINLEN:{minlen}"]
+            if extra_command.strip():
+                argv += shlex.split(extra_command.strip())
 
-        return (str(out_fwd), str(out_rev) if out_rev and out_rev.is_file() else "")
+            proc = subprocess.run(argv, capture_output=True, text=True)
+            if proc.returncode != 0:
+                raise RuntimeError(f"Trimmomatic failed for {sample_id} ({proc.returncode}): {proc.stderr}")
+
+            if not out_fwd.is_file() or out_fwd.stat().st_size == 0:
+                raise RuntimeError(f"Trimmomatic failed to produce output for {sample_id} at {out_fwd}")
+
+            fwd_list.append(str(out_fwd))
+            if out_rev and out_rev.is_file():
+                rev_list.append(str(out_rev))
+
+        if is_single:
+            return str(fwd_list[0]), (str(rev_list[0]) if rev_list else "")
+        return ",".join(fwd_list), ",".join(rev_list)
 
 
 NODE_CLASS_MAPPINGS = {"Trimmomatic": Trimmomatic}

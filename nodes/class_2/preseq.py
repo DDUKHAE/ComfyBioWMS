@@ -33,6 +33,8 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
 
 
 class Preseq:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Quality Control"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -70,8 +72,6 @@ class Preseq:
         out = _output_dir("Preseq", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[Preseq] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         out_txt = out / f"{bam_path.stem}_preseq_lc_extrap.txt"
 

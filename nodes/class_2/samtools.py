@@ -56,6 +56,8 @@ def _run(argv, cwd, partial=None):
 
 
 class SamtoolsSort:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -76,24 +78,50 @@ class SamtoolsSort:
         }
 
     def run(self, input_alignment, output_bam: str = "", threads=1, sort_order="coordinate", memory_per_thread="768M", extra_command=""):
-        source = _file(input_alignment, "Input alignment")
         executable = _executable()
-        output = Path(output_bam).expanduser().resolve() if (output_bam and str(output_bam).strip()) else (_output_dir("SamtoolsSort") / f"{_stem(source)}.sorted.bam")
-        output.parent.mkdir(parents=True, exist_ok=True)
-        argv = [executable, "sort", "-@", str(threads), "-m", memory_per_thread, "-O", "BAM", "-o", str(output)]
-        if sort_order == "name":
-            argv.append("-n")
-        elif sort_order == "lexicographical":
-            argv.append("-N")
-        if extra_command.strip():
-            argv.extend(shlex.split(extra_command))
-        argv.append(str(source))
-        _run(argv, output.parent, output)
-        _run([executable, "quickcheck", str(output)], output.parent)
-        return (str(output),)
+        raw = str(input_alignment).strip()
+        p = Path(raw).expanduser().resolve()
+        if p.is_dir():
+            sources = sorted(list(p.rglob("*.sam")) + list(p.rglob("*.bam")))
+            if not sources:
+                raise FileNotFoundError(f"No SAM/BAM files found in directory: {p}")
+        elif "," in raw:
+            sources = [Path(x.strip()).expanduser().resolve() for x in raw.split(",") if x.strip()]
+        else:
+            sources = [_file(raw, "Input alignment")]
+
+        base_out = _output_dir("SamtoolsSort", output_bam)
+        base_out.mkdir(parents=True, exist_ok=True)
+        is_single = len(sources) == 1 and p.is_file()
+
+        sorted_bams = []
+        for source in sources:
+            if is_single and output_bam and str(output_bam).strip() and not Path(output_bam).is_dir():
+                output = Path(output_bam).expanduser().resolve()
+            else:
+                output = base_out if is_single else (base_out / source.stem)
+                output = (output / f"{_stem(source)}.sorted.bam") if not is_single else (base_out / f"{_stem(source)}.sorted.bam")
+            output.parent.mkdir(parents=True, exist_ok=True)
+            argv = [executable, "sort", "-@", str(threads), "-m", memory_per_thread, "-O", "BAM", "-o", str(output)]
+            if sort_order == "name":
+                argv.append("-n")
+            elif sort_order == "lexicographical":
+                argv.append("-N")
+            if extra_command.strip():
+                argv.extend(shlex.split(extra_command))
+            argv.append(str(source))
+            _run(argv, output.parent, output)
+            _run([executable, "quickcheck", str(output)], output.parent)
+            sorted_bams.append(str(output))
+
+        if is_single:
+            return (sorted_bams[0],)
+        return (",".join(sorted_bams),)
 
 
 class SamtoolsIndex:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -127,6 +155,8 @@ class SamtoolsIndex:
 
 
 class SamtoolsMarkdup:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)

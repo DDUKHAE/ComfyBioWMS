@@ -39,6 +39,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class BBSplit:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Preprocessing"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING")
@@ -82,8 +84,6 @@ class BBSplit:
         out = _output_dir("BBSplit", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[BBSplit] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         clean_fwd = out / f"clean_{fwd_path.name}"
         clean_rev = out / f"clean_{rev_path.name}" if rev_path else None

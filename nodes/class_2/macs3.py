@@ -243,6 +243,8 @@ def _run(argv: List[str], cwd: Optional[Path] = None, max_tail_lines: int = 100)
 
 
 class Macs3Callpeak:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Epigenomics"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "STRING", "STRING")

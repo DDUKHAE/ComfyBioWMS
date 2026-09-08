@@ -1,0 +1,23 @@
+[
+  {
+    "case_id": "CS-R1",
+    "status": "ready_technical_e2e",
+    "workflow": "final_01_pancreas_scanpy_e2e.json"
+  },
+  {
+    "case_id": "CS-E1",
+    "status": "requires_runtime_database",
+    "workflow": "final_02_zymo_metaphlan_e2e.json"
+  },
+  {
+    "case_id": "CS-E2",
+    "status": "blocked",
+    "workflow": null,
+    "reason": "Downloaded SRR5458066 is a human-skin 16S run, not a PhiX174 assembly read set."
+  },
+  {
+    "case_id": "CS-S1",
+    "status": "ready_smoke",
+    "workflow": "final_03_gse110004_chri_smoke.json"
+  }
+]

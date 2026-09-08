@@ -32,6 +32,8 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
 
 
 class HUMAnN:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Microbiome"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")

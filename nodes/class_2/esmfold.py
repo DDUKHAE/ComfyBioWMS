@@ -28,6 +28,8 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
 
 
 class ESMFold:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/CADD"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "FLOAT")

@@ -47,6 +47,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class Kraken2Classify:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Metagenomics"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -88,8 +90,6 @@ class Kraken2Classify:
         out = _output_dir("Kraken2Classify", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[Kraken2] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         report_txt = out / f"{fwd_path.stem}_kraken2_report.txt"
         classified_txt = out / f"{fwd_path.stem}_kraken2_output.txt"

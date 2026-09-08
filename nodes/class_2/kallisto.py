@@ -1,14 +1,27 @@
-"""Kallisto near-optimal RNA-seq quantification node.
+"""Kallisto pseudoalignment and quantification node.
+
+Supports single FASTQ file inputs as well as directory inputs (or comma-separated paths)
+to automatically discover and process multiple sample pairs/singles iteratively in a single node.
 
 Python packages: none
 External binaries: kallisto
-Galaxy wrapper: galaxyproject/tools-iuc tools/kallisto/
 """
 
 import shlex
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
+try:
+    from .common import discover_samples
+except Exception:
+    try:
+        from nodes.class_2.common import discover_samples
+    except Exception:
+        def discover_samples(fwd_input: str, rev_input: str = ""):
+            p = Path(fwd_input).expanduser().resolve()
+            return [(p.stem, p, Path(rev_input).expanduser().resolve() if rev_input.strip() else None)]
 
 
 def _file(value: str, label: str) -> Path:
@@ -16,6 +29,7 @@ def _file(value: str, label: str) -> Path:
     if not path.is_file():
         raise FileNotFoundError(f"{label} is not a file: {path}")
     return path
+
 
 def _output_dir(node_name: str, custom_dir: str = "") -> Path:
     if custom_dir and str(custom_dir).strip():
@@ -30,8 +44,9 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
     return out
 
 
-
 class KallistoQuant:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Quantification"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -65,45 +80,53 @@ class KallistoQuant:
         extra_command: str = "",
     ):
         idx_path = _file(kallisto_index, "Kallisto Index")
-        fwd_path = _file(reads_fwd, "Forward reads")
-        rev_path = _file(reads_rev, "Reverse reads") if reads_rev.strip() else None
+        samples = discover_samples(reads_fwd, reads_rev)
 
         executable = shutil.which("kallisto")
         if not executable:
             raise RuntimeError("kallisto executable not found on PATH; install bioconda package kallisto")
 
-        out = _output_dir("KallistoQuant", output_dir)
-        out.mkdir(parents=True, exist_ok=True)
+        base_out = _output_dir("KallistoQuant", output_dir)
+        base_out.mkdir(parents=True, exist_ok=True)
 
-        argv = [
-            executable,
-            "quant",
-            "-i",
-            str(idx_path),
-            "-o",
-            str(out),
-            "-t",
-            str(threads),
-        ]
-        if rev_path:
-            argv += [str(fwd_path), str(rev_path)]
-        else:
-            argv += ["--single", "-l", str(fragment_length), "-s", str(sd), str(fwd_path)]
+        is_single = len(samples) == 1 and Path(str(reads_fwd).strip()).is_file()
+        tsv_list, h5_list = [], []
 
-        if extra_command.strip():
-            argv += shlex.split(extra_command.strip())
+        for sample_id, fwd_path, rev_path in samples:
+            sample_out = base_out if is_single else (base_out / sample_id)
+            sample_out.mkdir(parents=True, exist_ok=True)
 
-        proc = subprocess.run(argv, capture_output=True, text=True)
-        if proc.returncode != 0:
-            raise RuntimeError(f"kallisto quant failed ({proc.returncode}): {proc.stderr}")
+            argv = [
+                executable,
+                "quant",
+                "-i", str(idx_path),
+                "-o", str(sample_out),
+                "-t", str(threads),
+            ]
+            if rev_path:
+                argv += [str(fwd_path), str(rev_path)]
+            else:
+                argv += ["--single", "-l", str(fragment_length), "-s", str(sd), str(fwd_path)]
 
-        tsv_out = out / "abundance.tsv"
-        h5_out = out / "abundance.h5"
+            if extra_command.strip():
+                argv += shlex.split(extra_command.strip())
 
-        if not tsv_out.is_file() or tsv_out.stat().st_size == 0:
-            raise RuntimeError(f"kallisto failed to produce abundance.tsv in {out}")
+            proc = subprocess.run(argv, capture_output=True, text=True)
+            if proc.returncode != 0:
+                raise RuntimeError(f"kallisto quant failed for {sample_id} ({proc.returncode}): {proc.stderr}")
 
-        return (str(tsv_out), str(h5_out) if h5_out.is_file() else "")
+            tsv_out = sample_out / "abundance.tsv"
+            h5_out = sample_out / "abundance.h5"
+
+            if not tsv_out.is_file() or tsv_out.stat().st_size == 0:
+                raise RuntimeError(f"kallisto failed to produce abundance.tsv in {sample_out}")
+
+            tsv_list.append(str(tsv_out))
+            h5_list.append(str(h5_out) if h5_out.is_file() else "")
+
+        if is_single:
+            return tsv_list[0], h5_list[0]
+        return ",".join(tsv_list), ",".join(h5_list)
 
 
 NODE_CLASS_MAPPINGS = {"KallistoQuant": KallistoQuant}

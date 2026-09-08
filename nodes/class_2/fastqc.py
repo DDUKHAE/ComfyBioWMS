@@ -1,5 +1,8 @@
 """FastQC quality-report node.
 
+Supports single FASTQ/BAM/SAM inputs as well as directory inputs (or comma-separated paths)
+to automatically process multiple files in a single node.
+
 Python packages: none
 External binaries: FastQC==0.12.1 and Java runtime
 Conda: bioconda::fastqc=0.12.1, conda-forge::openjdk; Apt: fastqc, default-jre
@@ -12,6 +15,16 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+try:
+    from .common import discover_samples
+except Exception:
+    try:
+        from nodes.class_2.common import discover_samples
+    except Exception:
+        def discover_samples(fwd_input: str, rev_input: str = ""):
+            p = Path(fwd_input).expanduser().resolve()
+            return [(p.stem, p, None)]
 
 
 def _file(value: str, label: str) -> Path:
@@ -53,6 +66,8 @@ def _stem(path: Path) -> str:
 
 
 class FastQC:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Quality Control"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -89,7 +104,33 @@ class FastQC:
         kmers=7,
         extra_command="",
     ):
-        input_path = _file(input_file, "Read input")
+        raw_val = str(input_file).strip()
+        p = Path(raw_val).expanduser().resolve()
+
+        if p.is_file():
+            input_files = [p]
+        elif p.is_dir():
+            exts = (".fastq", ".fastq.gz", ".fq", ".fq.gz", ".bam", ".sam")
+            input_files = sorted([f for f in p.rglob("*") if f.is_file() and any(f.name.lower().endswith(e) for e in exts)])
+            if not input_files:
+                raise FileNotFoundError(f"No FASTQ/BAM/SAM files found in directory: {p}")
+        elif "," in raw_val:
+            input_files = [Path(x.strip()).expanduser().resolve() for x in raw_val.split(",") if x.strip()]
+            for f in input_files:
+                if not f.is_file():
+                    raise FileNotFoundError(f"Input file not found: {f}")
+        else:
+            raise FileNotFoundError(f"Read input is neither a file nor a directory: {raw_val}")
+
+        executable = shutil.which("fastqc")
+        if not executable:
+            raise RuntimeError(
+                "FastQC executable not found on PATH; install conda package fastqc=0.12.1"
+            )
+
+        out = _output_dir("FastQC", output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+
         extra_files = [
             ("--contaminants", contaminants),
             ("--adapters", adapters),
@@ -98,44 +139,51 @@ class FastQC:
         validated_extra_files = [
             (flag, _file(value, flag)) for flag, value in extra_files if value
         ]
-        executable = shutil.which("fastqc")
-        if not executable:
-            raise RuntimeError(
-                "FastQC executable not found on PATH; install conda package fastqc=0.12.1"
-            )
 
-        out = _output_dir("FastQC", output_dir)
-        if ignored:
-            print(f"[FastQC] ignored node-managed extra options: {' '.join(ignored)}", file=sys.stderr)
+        html_reports = []
+        zip_reports = []
 
-        file_format = "bam" if input_path.suffix.lower() == ".bam" else "sam" if input_path.suffix.lower() == ".sam" else "fastq"
-        argv = [
-            executable,
-            "--outdir",
-            str(out),
-            "--threads",
-            str(threads),
-            "--kmers",
-            str(kmers),
-            "--format",
-            file_format,
-            "--extract",
-        ]
-        for flag, path in validated_extra_files:
-            argv += [flag, str(path)]
-        if nogroup:
-            argv.append("--nogroup")
-        if min_length:
-            argv += ["--min_length", str(min_length)]
-        _run(argv + kept + [str(input_path)], out)
+        for curr_file in input_files:
+            file_format = "bam" if curr_file.suffix.lower() == ".bam" else "sam" if curr_file.suffix.lower() == ".sam" else "fastq"
+            argv = [
+                executable,
+                "--outdir", str(out),
+                "--threads", str(threads),
+                "--kmers", str(kmers),
+                "--format", file_format,
+                "--extract",
+            ]
+            for flag, path_arg in validated_extra_files:
+                argv += [flag, str(path_arg)]
+            if nogroup:
+                argv.append("--nogroup")
+            if min_length:
+                argv += ["--min_length", str(min_length)]
+            if extra_command.strip():
+                argv.extend(shlex.split(extra_command))
 
-        stem = _stem(input_path)
-        html = out / f"{stem}_fastqc.html"
-        archive = out / f"{stem}_fastqc.zip"
-        for path in (html, archive):
-            if not path.is_file() or path.stat().st_size == 0:
-                raise RuntimeError(f"FastQC did not create a nonempty report: {path}")
-        return str(html), str(archive)
+            argv.append(str(curr_file))
+            _run(argv, out)
+
+            stem = _stem(curr_file)
+            html = out / f"{stem}_fastqc.html"
+            archive = out / f"{stem}_fastqc.zip"
+            if not html.is_file() or html.stat().st_size == 0:
+                # Check for extracted dir or partial match
+                possible_html = list(out.glob(f"*{stem}*fastqc.html"))
+                if possible_html:
+                    html = possible_html[0]
+            if not archive.is_file() or archive.stat().st_size == 0:
+                possible_zip = list(out.glob(f"*{stem}*fastqc.zip"))
+                if possible_zip:
+                    archive = possible_zip[0]
+
+            html_reports.append(str(html))
+            zip_reports.append(str(archive))
+
+        if len(input_files) == 1 and p.is_file():
+            return html_reports[0], zip_reports[0]
+        return ",".join(html_reports), ",".join(zip_reports)
 
 
 NODE_CLASS_MAPPINGS = {"FastQC": FastQC}

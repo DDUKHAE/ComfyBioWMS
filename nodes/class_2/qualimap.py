@@ -40,6 +40,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class QualimapRNASeq:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Quality Control"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -80,8 +82,6 @@ class QualimapRNASeq:
         out = _output_dir("QualimapRNASeq", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[Qualimap] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         strand_protocol = "non-strand-specific"
         s = strandedness.strip().lower()

@@ -39,6 +39,8 @@ def _dir(value: str, label: str) -> Path:
 
 
 class Bakta:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Microbiome"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")

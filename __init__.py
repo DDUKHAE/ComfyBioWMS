@@ -17,6 +17,12 @@ if str(_ROOT_DIR) not in sys.path:
 if str(_ENGINE_SRC) not in sys.path:
     sys.path.insert(0, str(_ENGINE_SRC))
 
+# Apply backwards compatibility shims (e.g. pandas 2.x/3.x legacy unpickling support)
+try:
+    import nodes.compat  # noqa: F401
+except Exception:
+    pass
+
 logger = logging.getLogger("ComfyBIOWMS")
 
 # Import all registered node classes and display names from the registry

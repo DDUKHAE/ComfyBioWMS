@@ -3,8 +3,23 @@
 from .biopython import (
     BiopythonAlignmentStats,
     BiopythonSeqIOStats,
+    BiopythonSeqTransform,
+    BiopythonGCContent,
+    BiopythonPairwiseAlign,
+    BiopythonProtParam,
+    BiopythonRestrictionDigest,
+    BiopythonSeqFilter,
     BiopythonAlignmentStatsNode,
     BiopythonSeqIOStatsNode,
+    BiopythonSeqTransformNode,
+    BiopythonSeqTranscribeNode,
+    BiopythonGCContentNode,
+    BiopythonPairwiseAlignNode,
+    BiopythonAlignIONode,
+    BiopythonProtParamNode,
+    BiopythonRestrictionDigestNode,
+    BiopythonRestrictionNode,
+    BiopythonSeqFilterNode,
     NODE_CLASS_MAPPINGS as BIOPYTHON_CLASSES,
     NODE_DISPLAY_NAME_MAPPINGS as BIOPYTHON_NAMES,
 )
@@ -125,6 +140,12 @@ from .plots import (
     NODE_CLASS_MAPPINGS as PLOTS_CLASSES,
     NODE_DISPLAY_NAME_MAPPINGS as PLOTS_NAMES,
 )
+from .collect import (
+    JoinPaths,
+    JoinPathsNode,
+    NODE_CLASS_MAPPINGS as COLLECT_CLASSES,
+    NODE_DISPLAY_NAME_MAPPINGS as COLLECT_NAMES,
+)
 from .gseapy import (
     GSEAPathway,
     GSEAPathwayNode,
@@ -144,6 +165,7 @@ CLASS_1_NODE_MAPPINGS = {
     **RDKIT_CLASSES,
     **PLOTS_CLASSES,
     **GSEAPY_CLASSES,
+    **COLLECT_CLASSES,
 }
 CLASS_1_DISPLAY_NAME_MAPPINGS = {
     **BIOPYTHON_NAMES,
@@ -157,6 +179,7 @@ CLASS_1_DISPLAY_NAME_MAPPINGS = {
     **RDKIT_NAMES,
     **PLOTS_NAMES,
     **GSEAPY_NAMES,
+    **COLLECT_NAMES,
 }
 
 __all__ = [
@@ -164,8 +187,23 @@ __all__ = [
     "CLASS_1_DISPLAY_NAME_MAPPINGS",
     "BiopythonAlignmentStats",
     "BiopythonSeqIOStats",
+    "BiopythonSeqTransform",
+    "BiopythonGCContent",
+    "BiopythonPairwiseAlign",
+    "BiopythonProtParam",
+    "BiopythonRestrictionDigest",
+    "BiopythonSeqFilter",
     "BiopythonAlignmentStatsNode",
     "BiopythonSeqIOStatsNode",
+    "BiopythonSeqTransformNode",
+    "BiopythonSeqTranscribeNode",
+    "BiopythonGCContentNode",
+    "BiopythonPairwiseAlignNode",
+    "BiopythonAlignIONode",
+    "BiopythonProtParamNode",
+    "BiopythonRestrictionDigestNode",
+    "BiopythonRestrictionNode",
+    "BiopythonSeqFilterNode",
     "Tximport",
     "TximportNode",
     "DESeq2SampleQC",
@@ -249,4 +287,6 @@ __all__ = [
     "PUBLICATION_VISUALIZER_CLASSES",
     "GSEAPathway",
     "GSEAPathwayNode",
+    "JoinPaths",
+    "JoinPathsNode",
 ]

@@ -40,6 +40,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class StringTie:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Assembly"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -68,7 +70,17 @@ class StringTie:
         threads: int = 4,
         extra_command: str = "",
     ):
-        bam_path = _file(bam_file, "Input BAM")
+        raw = str(bam_file).strip()
+        p = Path(raw).expanduser().resolve()
+        if p.is_dir():
+            bams = sorted(p.rglob("*.bam"))
+            if not bams:
+                raise FileNotFoundError(f"No BAM files found in directory: {p}")
+        elif "," in raw:
+            bams = [Path(x.strip()).expanduser().resolve() for x in raw.split(",") if x.strip()]
+        else:
+            bams = [_file(raw, "Input BAM")]
+
         gtf_path = _file(guide_gtf, "Guide GTF") if guide_gtf.strip() else None
 
         executable = shutil.which("stringtie")
@@ -77,42 +89,51 @@ class StringTie:
                 "stringtie executable not found on PATH; install bioconda package stringtie"
             )
 
-        out = _output_dir("StringTie", output_dir)
-        out.mkdir(parents=True, exist_ok=True)
+        base_out = _output_dir("StringTie", output_dir)
+        base_out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[StringTie] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
+        is_single = len(bams) == 1 and p.is_file()
+        gtfs, abunds = [], []
 
-        out_gtf = out / f"{bam_path.stem}_transcripts.gtf"
-        out_abund = out / f"{bam_path.stem}_gene_abundances.tsv"
+        for bam_path in bams:
+            sample_out = base_out if is_single else (base_out / bam_path.stem)
+            sample_out.mkdir(parents=True, exist_ok=True)
 
-        argv = [
-            executable,
-            str(bam_path),
-            "-o",
-            str(out_gtf),
-            "-A",
-            str(out_abund),
-            "-p",
-            str(threads),
-        ]
-        if gtf_path:
-            argv += ["-G", str(gtf_path)]
+            out_gtf = sample_out / f"{bam_path.stem}_transcripts.gtf"
+            out_abund = sample_out / f"{bam_path.stem}_gene_abundances.tsv"
 
-        s = strandedness.strip().lower()
-        if s in ("reverse", "rf", "isr"):
-            argv.append("--rf")
-        elif s in ("forward", "fr", "isf"):
-            argv.append("--fr")
+            argv = [
+                executable,
+                str(bam_path),
+                "-o",
+                str(out_gtf),
+                "-A",
+                str(out_abund),
+                "-p",
+                str(threads),
+            ]
+            if gtf_path:
+                argv += ["-G", str(gtf_path)]
 
-        if extra_command.strip():
-            argv.extend(shlex.split(extra_command))
-        _run(argv, out)
+            s = strandedness.strip().lower()
+            if s in ("reverse", "rf", "isr"):
+                argv.append("--rf")
+            elif s in ("forward", "fr", "isf"):
+                argv.append("--fr")
 
-        if not out_gtf.is_file() or out_gtf.stat().st_size == 0:
-            raise RuntimeError(f"StringTie failed to create assembled GTF at {out_gtf}")
+            if extra_command.strip():
+                argv.extend(shlex.split(extra_command))
+            _run(argv, sample_out)
 
-        return (str(out_gtf), str(out_abund) if out_abund.is_file() else "")
+            if not out_gtf.is_file() or out_gtf.stat().st_size == 0:
+                raise RuntimeError(f"StringTie failed to create assembled GTF at {out_gtf}")
+
+            gtfs.append(str(out_gtf))
+            abunds.append(str(out_abund) if out_abund.is_file() else "")
+
+        if is_single:
+            return (gtfs[0], abunds[0])
+        return (",".join(gtfs), ",".join(abunds))
 
 
 NODE_CLASS_MAPPINGS = {"StringTie": StringTie}

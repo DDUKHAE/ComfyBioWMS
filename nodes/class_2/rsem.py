@@ -40,6 +40,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class RSEMCalculateExpression:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Quantification"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")

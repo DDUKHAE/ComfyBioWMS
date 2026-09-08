@@ -40,6 +40,8 @@ def _run_to_file(argv: list[str], out_file: Path) -> None:
 
 
 class BedtoolsGenomeCoverage:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Visualization"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -75,8 +77,6 @@ class BedtoolsGenomeCoverage:
         out = _output_dir("BedtoolsGenomeCoverage", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[BEDTools] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         base_argv = [executable, "genomecov", "-ibam", str(bam_path), "-bg", "-split"] + kept
 

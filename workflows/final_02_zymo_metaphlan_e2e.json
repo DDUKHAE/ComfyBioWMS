@@ -1,0 +1,233 @@
+{
+  "last_node_id": 14,
+  "last_link_id": 4,
+  "version": 0.4,
+  "config": {},
+  "extra": {
+    "comfybio_case_study": "ZymoBIOMICS D6300 read-backed MetaPhlAn E2E",
+    "benchmark": {
+      "case_id": "CS-E1",
+      "claim_level": "e2e",
+      "dataset_status": "verified_accession_first_100000_pairs",
+      "source_accession": "SRR12324253",
+      "read_pairs": 100000,
+      "dataset_sha256": {
+        "reads_R1.fastq.gz": "ee8597b4ad203b66521fb3fb88960520bfdb87d2609107477c28a7f3fe58b043",
+        "reads_R2.fastq.gz": "0efc31fb5835eafb1b7a657ef6be6ca8222ab34c217c213ffef6b60fc72e7d84"
+      },
+      "runtime_database_required": true,
+      "limitation": "A compatible full MetaPhlAn database is not bundled with the downloaded reads."
+    }
+  },
+  "groups": [],
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Fastp",
+      "pos": [
+        80,
+        80
+      ],
+      "size": [
+        340,
+        266
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "read1",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "read2",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "json_report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "html_report",
+          "type": "STRING",
+          "slot_index": 3,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Fastp"
+      },
+      "widgets_values": [
+        "data/paper_zymo_d6300/reads_R1.fastq.gz",
+        "data/paper_zymo_d6300/reads_R2.fastq.gz",
+        4,
+        15,
+        40,
+        5,
+        15,
+        true,
+        false,
+        ""
+      ],
+      "title": "Fastp"
+    },
+    {
+      "id": 6,
+      "type": "MetaPhlAn",
+      "pos": [
+        480,
+        80
+      ],
+      "size": [
+        340,
+        146
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "reads_fwd",
+          "type": "STRING",
+          "link": 1,
+          "widget": {
+            "name": "reads_fwd"
+          }
+        },
+        {
+          "name": "reads_rev",
+          "type": "STRING",
+          "link": 2,
+          "widget": {
+            "name": "reads_rev"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "profiled_metagenome_tsv",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MetaPhlAn"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "fastq",
+        4,
+        ""
+      ],
+      "title": "Profiler 2: MetaPhlAn"
+    },
+    {
+      "id": 11,
+      "type": "PreviewAny",
+      "pos": [
+        880,
+        80
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 3
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "MetaPhlAn profile"
+    },
+    {
+      "id": 14,
+      "type": "PreviewAny",
+      "pos": [
+        480,
+        340
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 4
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "fastp report"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      6,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      1,
+      1,
+      6,
+      1,
+      "STRING"
+    ],
+    [
+      3,
+      6,
+      0,
+      11,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      1,
+      2,
+      14,
+      0,
+      "STRING"
+    ]
+  ]
+}

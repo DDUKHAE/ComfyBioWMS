@@ -30,6 +30,8 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
 
 
 class DupRadar:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Quality Control"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")

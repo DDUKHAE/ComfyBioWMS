@@ -39,6 +39,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class MultiQC:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Reporting"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -92,8 +94,6 @@ class MultiQC:
         out = _output_dir("MultiQC", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[MultiQC] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         argv = [
             executable,

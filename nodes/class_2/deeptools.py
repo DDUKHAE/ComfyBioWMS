@@ -32,6 +32,8 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
 
 
 class DeeptoolsMatrix:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Epigenomics"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")

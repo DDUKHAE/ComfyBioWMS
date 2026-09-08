@@ -1,8 +1,11 @@
 """STAR (Spliced Transcripts Alignment to a Reference) node.
 
+Supports single FASTQ file inputs as well as directory inputs (or comma-separated paths)
+to automatically discover and process multiple sample pairs/singles iteratively in a single node.
+
 Python packages: none
 External binaries: STAR
-Galaxy wrapper: galaxyproject/tools-iuc tools/rna_star/rg_rnaStar.xml
+Galaxy wrapper: galaxyproject/tools-iuc tools/rgrnastar/rg_rnaStar.xml
 """
 
 import shlex
@@ -11,17 +14,23 @@ import subprocess
 import sys
 from pathlib import Path
 
-def _check_path(value: str, label: str, is_dir: bool = False) -> Path:
-    path = Path(value).expanduser().resolve()
-    valid = path.is_dir() if is_dir else path.is_file()
-    if not valid:
-        kind = "directory" if is_dir else "file"
-        raise FileNotFoundError(f"{label} is not a {kind}: {path}")
-    return path
+try:
+    from .common import discover_samples
+except Exception:
+    try:
+        from nodes.class_2.common import discover_samples
+    except Exception:
+        def discover_samples(fwd_input: str, rev_input: str = ""):
+            p = Path(fwd_input).expanduser().resolve()
+            return [(p.stem, p, Path(rev_input).expanduser().resolve() if rev_input.strip() else None)]
 
 
 def _file(value: str, label: str) -> Path:
-    return _check_path(value, label, is_dir=False)
+    path = Path(value).expanduser().resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"{label} is not a file: {path}")
+    return path
+
 
 def _output_dir(node_name: str, custom_dir: str = "") -> Path:
     if custom_dir and str(custom_dir).strip():
@@ -36,9 +45,11 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
     return out
 
 
-
 def _dir(value: str, label: str) -> Path:
-    return _check_path(value, label, is_dir=True)
+    path = Path(value).expanduser().resolve()
+    if not path.is_dir():
+        raise FileNotFoundError(f"{label} is not a directory: {path}")
+    return path
 
 
 def _run(argv: list[str], cwd: Path) -> None:
@@ -49,6 +60,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class STARGenomeGenerate:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -63,8 +76,8 @@ class STARGenomeGenerate:
             "optional": {
                 "gtf_file": ("STRING", {"default": ""}),
                 "sjdb_overhang": ("INT", {"default": 100, "min": 1, "max": 1000}),
+                "genome_sa_index_nbases": ("INT", {"default": 14, "min": 1, "max": 18}),
                 "threads": ("INT", {"default": 4, "min": 1, "max": 256}),
-                "genome_sa_index_nbases": ("INT", {"default": 14, "min": 1, "max": 16}),
                 "extra_command": ("STRING", {"default": "", "multiline": True}),
             },
         }
@@ -75,12 +88,12 @@ class STARGenomeGenerate:
         index_dir: str = "",
         gtf_file: str = "",
         sjdb_overhang: int = 100,
-        threads: int = 4,
         genome_sa_index_nbases: int = 14,
+        threads: int = 4,
         extra_command: str = "",
     ):
-        fasta_path = _file(genome_fasta, "Genome FASTA")
-        gtf_path = _file(gtf_file, "Annotation GTF") if gtf_file.strip() else None
+        fa_path = _file(genome_fasta, "Genome FASTA")
+        gtf_path = _file(gtf_file, "GTF Annotation") if gtf_file.strip() else None
 
         executable = shutil.which("STAR")
         if not executable:
@@ -89,14 +102,11 @@ class STARGenomeGenerate:
         out = _output_dir("STARGenomeGenerate", index_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[STAR] ignored managed extra options: {' '.join(ignored)}", file=sys.stderr)
-
         argv = [
             executable,
             "--runMode", "genomeGenerate",
             "--genomeDir", str(out),
-            "--genomeFastaFiles", str(fasta_path),
+            "--genomeFastaFiles", str(fa_path),
             "--runThreadN", str(threads),
             "--genomeSAindexNbases", str(genome_sa_index_nbases),
         ]
@@ -115,6 +125,8 @@ class STARGenomeGenerate:
 
 
 class STARAlignReads:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Alignment"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "STRING")
@@ -160,70 +172,87 @@ class STARAlignReads:
         extra_command: str = "",
     ):
         idx_dir = _dir(star_index_dir, "STAR Index Directory")
-        fwd_path = _file(reads_fwd, "Forward reads FASTQ")
-        rev_path = _file(reads_rev, "Reverse reads FASTQ") if reads_rev.strip() else None
+        samples = discover_samples(reads_fwd, reads_rev)
 
         executable = shutil.which("STAR")
         if not executable:
             raise RuntimeError("STAR executable not found on PATH; install bioconda package star")
 
-        out = _output_dir("STARAlignReads", output_dir)
-        out.mkdir(parents=True, exist_ok=True)
-        prefix = f"{out}/"
+        base_out = _output_dir("STARAlignReads", output_dir)
+        base_out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[STAR] ignored managed extra options: {' '.join(ignored)}", file=sys.stderr)
+        is_single = len(samples) == 1 and Path(str(reads_fwd).strip()).is_file()
+        aligned_bams, tx_bams, gene_counts, sjs, logs, unmapped = [], [], [], [], [], []
 
-        read_files = [str(fwd_path)]
-        if rev_path:
-            read_files.append(str(rev_path))
+        for sample_id, fwd_path, rev_path in samples:
+            sample_out = base_out if is_single else (base_out / sample_id)
+            sample_out.mkdir(parents=True, exist_ok=True)
+            prefix = f"{sample_out}/"
 
-        argv = [
-            executable,
-            "--runMode", "alignReads",
-            "--genomeDir", str(idx_dir),
-            "--readFilesIn", *read_files,
-            "--runThreadN", str(threads),
-            "--outFileNamePrefix", prefix,
-            "--outSAMtype", "BAM", "SortedByCoordinate",
-        ]
+            read_files = [str(fwd_path)]
+            if rev_path:
+                read_files.append(str(rev_path))
 
-        if str(fwd_path).endswith(".gz"):
-            argv.extend(["--readFilesCommand", "zcat"])
-        elif str(fwd_path).endswith(".bz2"):
-            argv.extend(["--readFilesCommand", "bzcat"])
+            argv = [
+                executable,
+                "--runMode", "alignReads",
+                "--genomeDir", str(idx_dir),
+                "--readFilesIn", *read_files,
+                "--runThreadN", str(threads),
+                "--outFileNamePrefix", prefix,
+                "--outSAMtype", "BAM", "SortedByCoordinate",
+            ]
 
-        quant_map = {
-            "Both (GeneCounts + TranscriptomeSAM)": ["TranscriptomeSAM", "GeneCounts"],
-            "GeneCounts": ["GeneCounts"],
-            "TranscriptomeSAM": ["TranscriptomeSAM"],
-        }
-        if quant_mode in quant_map:
-            argv.extend(["--quantMode", *quant_map[quant_mode]])
+            if str(fwd_path).endswith(".gz"):
+                argv.extend(["--readFilesCommand", "zcat"])
+            elif str(fwd_path).endswith(".bz2"):
+                argv.extend(["--readFilesCommand", "bzcat"])
 
-        if twopass_mode == "Basic":
-            argv.extend(["--twopassMode", "Basic"])
+            quant_map = {
+                "Both (GeneCounts + TranscriptomeSAM)": ["TranscriptomeSAM", "GeneCounts"],
+                "GeneCounts": ["GeneCounts"],
+                "TranscriptomeSAM": ["TranscriptomeSAM"],
+            }
+            if quant_mode in quant_map:
+                argv.extend(["--quantMode", *quant_map[quant_mode]])
 
-        if out_unmapped_fastx:
-            argv.extend(["--outSAMunmapped", "Within", "--outReadsUnmapped", "Fastx"])
+            if twopass_mode == "Basic":
+                argv.extend(["--twopassMode", "Basic"])
 
-        if extra_command.strip():
-            argv.extend(shlex.split(extra_command))
-        _run(argv, out)
+            if out_unmapped_fastx:
+                argv.extend(["--outSAMunmapped", "Within", "--outReadsUnmapped", "Fastx"])
 
-        aligned_bam = out / "Aligned.sortedByCoord.out.bam"
-        if not aligned_bam.is_file() or aligned_bam.stat().st_size == 0:
-            raise RuntimeError(f"STAR failed to generate sorted BAM in {out}")
+            if extra_command.strip():
+                argv.extend(shlex.split(extra_command))
+            _run(argv, sample_out)
 
-        targets = [
-            aligned_bam,
-            out / "Aligned.toTranscriptome.out.bam",
-            out / "ReadsPerGene.out.tab",
-            out / "SJ.out.tab",
-            out / "Log.final.out",
-            out / "Unmapped.out.mate1",
-        ]
-        return tuple(str(p) if p.is_file() else "" for p in targets)
+            aligned_bam = sample_out / "Aligned.sortedByCoord.out.bam"
+            if not aligned_bam.is_file() or aligned_bam.stat().st_size == 0:
+                raise RuntimeError(f"STAR failed to generate sorted BAM for {sample_id} in {sample_out}")
+
+            t_bam = sample_out / "Aligned.toTranscriptome.out.bam"
+            g_cnt = sample_out / "ReadsPerGene.out.tab"
+            sj = sample_out / "SJ.out.tab"
+            lg = sample_out / "Log.final.out"
+            unm = sample_out / "Unmapped.out.mate1"
+
+            aligned_bams.append(str(aligned_bam))
+            tx_bams.append(str(t_bam) if t_bam.is_file() else "")
+            gene_counts.append(str(g_cnt) if g_cnt.is_file() else "")
+            sjs.append(str(sj) if sj.is_file() else "")
+            logs.append(str(lg) if lg.is_file() else "")
+            unmapped.append(str(unm) if unm.is_file() else "")
+
+        if is_single:
+            return (aligned_bams[0], tx_bams[0], gene_counts[0], sjs[0], logs[0], unmapped[0])
+        return (
+            ",".join(aligned_bams),
+            ",".join(tx_bams),
+            ",".join(gene_counts),
+            ",".join(sjs),
+            ",".join(logs),
+            ",".join(unmapped),
+        )
 
 
 NODE_CLASS_MAPPINGS = {

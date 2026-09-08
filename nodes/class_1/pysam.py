@@ -16,6 +16,8 @@ def _file(value: str, label: str) -> Path:
 
 
 class PysamStats:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Genomics"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "INT", "INT", "FLOAT")

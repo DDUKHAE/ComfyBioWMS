@@ -1,0 +1,1493 @@
+{
+  "last_node_id": 25,
+  "last_link_id": 31,
+  "version": 0.4,
+  "config": {},
+  "extra": {
+    "comfybio_case_study": "GSE110004 chromosome-I RNA-seq workflow smoke test",
+    "benchmark": {
+      "case_id": "CS-S1",
+      "claim_level": "smoke",
+      "dataset_status": "verified_nfcore_fixture",
+      "source_revision": "nf-core/test-datasets rnaseq@e07c1b1",
+      "runs": [
+        "SRR6357070",
+        "SRR6357072",
+        "SRR6357076",
+        "SRR6357077"
+      ],
+      "read_pairs_per_run": 50000,
+      "reference_scope": "Saccharomyces cerevisiae chromosome I only",
+      "limitation": "Subsampled reads and a chromosome-I reference cannot reproduce the full paper result."
+    }
+  },
+  "groups": [],
+  "nodes": [
+    {
+      "id": 1,
+      "type": "FastQC",
+      "pos": [
+        80,
+        80
+      ],
+      "size": [
+        340,
+        242
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "html_report",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            31
+          ]
+        },
+        {
+          "name": "zip_report",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FastQC"
+      },
+      "widgets_values": [
+        "data/nf_core_rnaseq",
+        2,
+        "",
+        "",
+        "",
+        false,
+        0,
+        7,
+        ""
+      ],
+      "title": "FastQC (raw reads)"
+    },
+    {
+      "id": 2,
+      "type": "TrimGalore",
+      "pos": [
+        80,
+        340
+      ],
+      "size": [
+        340,
+        242
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "trimmed_reads_fwd",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            2,
+            5,
+            9,
+            14
+          ]
+        },
+        {
+          "name": "trimmed_reads_rev",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": [
+            3,
+            6,
+            10,
+            15
+          ]
+        },
+        {
+          "name": "trimming_report",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TrimGalore"
+      },
+      "widgets_values": [
+        "data/nf_core_rnaseq",
+        "",
+        20,
+        "",
+        "",
+        1,
+        20,
+        2,
+        ""
+      ],
+      "title": "TrimGalore (batch trimming)"
+    },
+    {
+      "id": 3,
+      "type": "SalmonIndex",
+      "pos": [
+        80,
+        600
+      ],
+      "size": [
+        340,
+        146
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "salmon_index_dir",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            1,
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SalmonIndex"
+      },
+      "widgets_values": [
+        "data/nf_core_rnaseq/transcriptome.fasta",
+        "",
+        31,
+        4,
+        ""
+      ],
+      "title": "SalmonIndex"
+    },
+    {
+      "id": 4,
+      "type": "InferStrandedness",
+      "pos": [
+        480,
+        80
+      ],
+      "size": [
+        340,
+        170
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "salmon_index_dir",
+          "type": "STRING",
+          "link": 1,
+          "widget": {
+            "name": "salmon_index_dir"
+          }
+        },
+        {
+          "name": "reads_fwd",
+          "type": "STRING",
+          "link": 2,
+          "widget": {
+            "name": "reads_fwd"
+          }
+        },
+        {
+          "name": "reads_rev",
+          "type": "STRING",
+          "link": 3,
+          "widget": {
+            "name": "reads_rev"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "strandedness",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            7,
+            12,
+            16
+          ]
+        },
+        {
+          "name": "summary_json",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InferStrandedness"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "",
+        1000000,
+        2,
+        ""
+      ],
+      "title": "InferStrandedness"
+    },
+    {
+      "id": 5,
+      "type": "SalmonQuantReads",
+      "pos": [
+        880,
+        80
+      ],
+      "size": [
+        340,
+        242
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "salmon_index_dir",
+          "type": "STRING",
+          "link": 4,
+          "widget": {
+            "name": "salmon_index_dir"
+          }
+        },
+        {
+          "name": "reads_fwd",
+          "type": "STRING",
+          "link": 5,
+          "widget": {
+            "name": "reads_fwd"
+          }
+        },
+        {
+          "name": "reads_rev",
+          "type": "STRING",
+          "link": 6,
+          "widget": {
+            "name": "reads_rev"
+          }
+        },
+        {
+          "name": "strandedness",
+          "type": "STRING",
+          "link": 7,
+          "widget": {
+            "name": "strandedness"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "quant_sf",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            19
+          ]
+        },
+        {
+          "name": "salmon_out_dir",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SalmonQuantReads"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "",
+        "auto",
+        true,
+        true,
+        true,
+        4,
+        ""
+      ],
+      "title": "Route A: Salmon (selective alignment)"
+    },
+    {
+      "id": 6,
+      "type": "STARGenomeGenerate",
+      "pos": [
+        80,
+        860
+      ],
+      "size": [
+        340,
+        170
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "star_index_dir",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "STARGenomeGenerate"
+      },
+      "widgets_values": [
+        "data/nf_core_rnaseq/genome.fasta",
+        "data/nf_core_rnaseq/genes.gtf",
+        100,
+        9,
+        4,
+        ""
+      ],
+      "title": "STAR index"
+    },
+    {
+      "id": 7,
+      "type": "STARAlignReads",
+      "pos": [
+        480,
+        340
+      ],
+      "size": [
+        340,
+        218
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "star_index_dir",
+          "type": "STRING",
+          "link": 8,
+          "widget": {
+            "name": "star_index_dir"
+          }
+        },
+        {
+          "name": "reads_fwd",
+          "type": "STRING",
+          "link": 9,
+          "widget": {
+            "name": "reads_fwd"
+          }
+        },
+        {
+          "name": "reads_rev",
+          "type": "STRING",
+          "link": 10,
+          "widget": {
+            "name": "reads_rev"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "aligned_bam",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": []
+        },
+        {
+          "name": "transcriptome_bam",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": [
+            11
+          ]
+        },
+        {
+          "name": "gene_counts_tab",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        },
+        {
+          "name": "splice_junctions",
+          "type": "STRING",
+          "slot_index": 3,
+          "links": []
+        },
+        {
+          "name": "log_final",
+          "type": "STRING",
+          "slot_index": 4,
+          "links": []
+        },
+        {
+          "name": "unmapped_reads_fwd",
+          "type": "STRING",
+          "slot_index": 5,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "STARAlignReads"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "",
+        4,
+        "Both (GeneCounts + TranscriptomeSAM)",
+        "Basic",
+        true,
+        ""
+      ],
+      "title": "STARAlignReads"
+    },
+    {
+      "id": 8,
+      "type": "SalmonQuantAlignment",
+      "pos": [
+        880,
+        340
+      ],
+      "size": [
+        340,
+        170
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "transcriptome_bam",
+          "type": "STRING",
+          "link": 11,
+          "widget": {
+            "name": "transcriptome_bam"
+          }
+        },
+        {
+          "name": "strandedness",
+          "type": "STRING",
+          "link": 12,
+          "widget": {
+            "name": "strandedness"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "quant_sf",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            25
+          ]
+        },
+        {
+          "name": "salmon_out_dir",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SalmonQuantAlignment"
+      },
+      "widgets_values": [
+        "data/nf_core_rnaseq/transcriptome.fasta",
+        "",
+        "auto",
+        false,
+        4,
+        ""
+      ],
+      "title": "Route B: STAR + Salmon (alignment mode)"
+    },
+    {
+      "id": 9,
+      "type": "HISAT2Build",
+      "pos": [
+        80,
+        1120
+      ],
+      "size": [
+        340,
+        98
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "hisat2_index_prefix",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HISAT2Build"
+      },
+      "widgets_values": [
+        "data/nf_core_rnaseq/genome.fasta",
+        4,
+        ""
+      ],
+      "title": "HISAT2Build"
+    },
+    {
+      "id": 10,
+      "type": "HISAT2Align",
+      "pos": [
+        880,
+        600
+      ],
+      "size": [
+        340,
+        170
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "hisat2_index_prefix",
+          "type": "STRING",
+          "link": 13,
+          "widget": {
+            "name": "hisat2_index_prefix"
+          }
+        },
+        {
+          "name": "reads_fwd",
+          "type": "STRING",
+          "link": 14,
+          "widget": {
+            "name": "reads_fwd"
+          }
+        },
+        {
+          "name": "reads_rev",
+          "type": "STRING",
+          "link": 15,
+          "widget": {
+            "name": "reads_rev"
+          }
+        },
+        {
+          "name": "strandedness",
+          "type": "STRING",
+          "link": 16,
+          "widget": {
+            "name": "strandedness"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "aligned_sam",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            17
+          ]
+        },
+        {
+          "name": "summary_txt",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HISAT2Align"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "",
+        "auto",
+        4,
+        ""
+      ],
+      "title": "HISAT2Align"
+    },
+    {
+      "id": 11,
+      "type": "SamtoolsSort",
+      "pos": [
+        1280,
+        80
+      ],
+      "size": [
+        340,
+        146
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input_alignment",
+          "type": "STRING",
+          "link": 17,
+          "widget": {
+            "name": "input_alignment"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "sorted_bam",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamtoolsSort"
+      },
+      "widgets_values": [
+        "",
+        1,
+        "coordinate",
+        "768M",
+        ""
+      ],
+      "title": "SamtoolsSort"
+    },
+    {
+      "id": 12,
+      "type": "StringTie",
+      "pos": [
+        1680,
+        80
+      ],
+      "size": [
+        340,
+        146
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "bam_file",
+          "type": "STRING",
+          "link": 18,
+          "widget": {
+            "name": "bam_file"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "assembled_gtf",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": []
+        },
+        {
+          "name": "gene_abundances_tsv",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": [
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringTie"
+      },
+      "widgets_values": [
+        "",
+        "data/nf_core_rnaseq/genes.gtf",
+        "auto",
+        4,
+        ""
+      ],
+      "title": "Route C: HISAT2 + StringTie"
+    },
+    {
+      "id": 13,
+      "type": "Tximport",
+      "pos": [
+        1280,
+        340
+      ],
+      "size": [
+        340,
+        122
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "quant_files",
+          "type": "STRING",
+          "link": 19,
+          "widget": {
+            "name": "quant_files"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "gene_counts_tsv",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            20,
+            22,
+            24
+          ]
+        },
+        {
+          "name": "gene_tpm_tsv",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        },
+        {
+          "name": "summary_json",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Tximport"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "",
+        "lengthScaledTPM"
+      ],
+      "title": "tximport (4-sample gene matrix)"
+    },
+    {
+      "id": 14,
+      "type": "DESeq2SampleQC",
+      "pos": [
+        1680,
+        340
+      ],
+      "size": [
+        340,
+        74
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "counts_tsv",
+          "type": "STRING",
+          "link": 20,
+          "widget": {
+            "name": "counts_tsv"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "pca_plot_png",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": []
+        },
+        {
+          "name": "correlation_heatmap_png",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        },
+        {
+          "name": "summary_json",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": [
+            27
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DESeq2SampleQC"
+      },
+      "widgets_values": [
+        "",
+        "data/nf_core_rnaseq/sample_metadata.csv"
+      ],
+      "title": "DESeq2SampleQC"
+    },
+    {
+      "id": 15,
+      "type": "MultiQC",
+      "pos": [
+        1280,
+        600
+      ],
+      "size": [
+        340,
+        170
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "extra_scan_dirs",
+          "type": "STRING",
+          "link": 21,
+          "widget": {
+            "name": "extra_scan_dirs"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "multiqc_html",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            30
+          ]
+        },
+        {
+          "name": "multiqc_data_dir",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MultiQC"
+      },
+      "widgets_values": [
+        "results/cs1_rnaseq",
+        "multiqc_report.html",
+        "CS-1 nf-core/rnaseq route concordance",
+        "",
+        "",
+        ""
+      ],
+      "title": "MultiQC"
+    },
+    {
+      "id": 16,
+      "type": "DESeq2",
+      "pos": [
+        1680,
+        600
+      ],
+      "size": [
+        340,
+        218
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "count_matrix_csv",
+          "type": "STRING",
+          "link": 22,
+          "widget": {
+            "name": "count_matrix_csv"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "deseq2_results_csv",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "normalized_counts_csv",
+          "type": "STRING",
+          "slot_index": 1,
+          "links": []
+        },
+        {
+          "name": "deg_summary_json",
+          "type": "STRING",
+          "slot_index": 2,
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DESeq2"
+      },
+      "widgets_values": [
+        "",
+        "data/nf_core_rnaseq/sample_metadata.csv",
+        "condition",
+        "",
+        "",
+        0.05,
+        0.0,
+        ""
+      ],
+      "title": "DESeq2 (Differential Expression)"
+    },
+    {
+      "id": 17,
+      "type": "VolcanoPlot",
+      "pos": [
+        2080,
+        80
+      ],
+      "size": [
+        340,
+        314
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "deg_results_csv",
+          "type": "STRING",
+          "link": 23,
+          "widget": {
+            "name": "deg_results_csv"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "plot_path",
+          "type": "STRING",
+          "slot_index": 0,
+          "links": [
+            29
+          ]
+        },
+        {
+          "name": "preview_image",
+          "type": "IMAGE",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VolcanoPlot"
+      },
+      "widgets_values": [
+        "",
+        "Differential Expression Volcano Plot",
+        300,
+        7.0,
+        5.5,
+        "nature",
+        "log2FoldChange",
+        "padj",
+        "gene_name",
+        1.0,
+        0.05,
+        10
+      ],
+      "title": "Volcano Plot (DEGs)"
+    },
+    {
+      "id": 18,
+      "type": "PreviewAny",
+      "pos": [
+        1680,
+        860
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 24
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "Route A gene counts"
+    },
+    {
+      "id": 19,
+      "type": "PreviewAny",
+      "pos": [
+        1280,
+        860
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 25
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "Route B quant.sf"
+    },
+    {
+      "id": 20,
+      "type": "PreviewAny",
+      "pos": [
+        2080,
+        340
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 26
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "Route C abundances"
+    },
+    {
+      "id": 21,
+      "type": "PreviewAny",
+      "pos": [
+        2080,
+        600
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 27
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "Sample QC summary"
+    },
+    {
+      "id": 22,
+      "type": "PreviewAny",
+      "pos": [
+        2080,
+        860
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 28
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "DESeq2 DEG summary"
+    },
+    {
+      "id": 23,
+      "type": "PreviewAny",
+      "pos": [
+        2480,
+        80
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 29
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "Volcano Plot PNG"
+    },
+    {
+      "id": 24,
+      "type": "PreviewAny",
+      "pos": [
+        1680,
+        1120
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 30
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "MultiQC report"
+    },
+    {
+      "id": 25,
+      "type": "PreviewAny",
+      "pos": [
+        480,
+        600
+      ],
+      "size": [
+        340,
+        50
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "STRING",
+          "link": 31
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "title": "FastQC report"
+    }
+  ],
+  "links": [
+    [
+      1,
+      3,
+      0,
+      4,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      2,
+      0,
+      4,
+      1,
+      "STRING"
+    ],
+    [
+      3,
+      2,
+      1,
+      4,
+      2,
+      "STRING"
+    ],
+    [
+      4,
+      3,
+      0,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      5,
+      2,
+      0,
+      5,
+      1,
+      "STRING"
+    ],
+    [
+      6,
+      2,
+      1,
+      5,
+      2,
+      "STRING"
+    ],
+    [
+      7,
+      4,
+      0,
+      5,
+      3,
+      "STRING"
+    ],
+    [
+      8,
+      6,
+      0,
+      7,
+      0,
+      "STRING"
+    ],
+    [
+      9,
+      2,
+      0,
+      7,
+      1,
+      "STRING"
+    ],
+    [
+      10,
+      2,
+      1,
+      7,
+      2,
+      "STRING"
+    ],
+    [
+      11,
+      7,
+      1,
+      8,
+      0,
+      "STRING"
+    ],
+    [
+      12,
+      4,
+      0,
+      8,
+      1,
+      "STRING"
+    ],
+    [
+      13,
+      9,
+      0,
+      10,
+      0,
+      "STRING"
+    ],
+    [
+      14,
+      2,
+      0,
+      10,
+      1,
+      "STRING"
+    ],
+    [
+      15,
+      2,
+      1,
+      10,
+      2,
+      "STRING"
+    ],
+    [
+      16,
+      4,
+      0,
+      10,
+      3,
+      "STRING"
+    ],
+    [
+      17,
+      10,
+      0,
+      11,
+      0,
+      "STRING"
+    ],
+    [
+      18,
+      11,
+      0,
+      12,
+      0,
+      "STRING"
+    ],
+    [
+      19,
+      5,
+      0,
+      13,
+      0,
+      "STRING"
+    ],
+    [
+      20,
+      13,
+      0,
+      14,
+      0,
+      "STRING"
+    ],
+    [
+      21,
+      5,
+      1,
+      15,
+      0,
+      "STRING"
+    ],
+    [
+      22,
+      13,
+      0,
+      16,
+      0,
+      "STRING"
+    ],
+    [
+      23,
+      16,
+      0,
+      17,
+      0,
+      "STRING"
+    ],
+    [
+      24,
+      13,
+      0,
+      18,
+      0,
+      "STRING"
+    ],
+    [
+      25,
+      8,
+      0,
+      19,
+      0,
+      "STRING"
+    ],
+    [
+      26,
+      12,
+      1,
+      20,
+      0,
+      "STRING"
+    ],
+    [
+      27,
+      14,
+      2,
+      21,
+      0,
+      "STRING"
+    ],
+    [
+      28,
+      16,
+      2,
+      22,
+      0,
+      "STRING"
+    ],
+    [
+      29,
+      17,
+      0,
+      23,
+      0,
+      "STRING"
+    ],
+    [
+      30,
+      15,
+      0,
+      24,
+      0,
+      "STRING"
+    ],
+    [
+      31,
+      1,
+      0,
+      25,
+      0,
+      "STRING"
+    ]
+  ]
+}

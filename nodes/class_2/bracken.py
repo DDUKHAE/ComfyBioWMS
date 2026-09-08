@@ -47,6 +47,8 @@ def _run(argv: list[str], cwd: Path) -> None:
 
 
 class Bracken:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Metagenomics"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -87,8 +89,6 @@ class Bracken:
         out = _output_dir("Bracken", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(f"[Bracken] ignored managed extra options: {" ".join(ignored)}", file=sys.stderr)
 
         level = taxonomic_level[0]  # S, G, F, etc.
         out_abundance = out / f"{report_path.stem}_bracken_abund_{level}.tsv"

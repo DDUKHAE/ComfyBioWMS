@@ -61,6 +61,8 @@ def _validate_contigs(path: Path) -> str:
 
 
 class Spades:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Genome Assembly"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING", "STRING")
@@ -120,11 +122,6 @@ class Spades:
         out = _output_dir("Spades", output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        if ignored:
-            print(
-                f"[spades] ignored node-managed extra options: {' '.join(ignored)}",
-                file=sys.stderr,
-            )
 
         argv = [
             executable,

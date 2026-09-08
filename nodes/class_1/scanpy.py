@@ -7,6 +7,12 @@ External binaries: none
 import json
 from pathlib import Path
 
+try:
+    from nodes.compat import ensure_pandas_compat
+    ensure_pandas_compat()
+except Exception:
+    pass
+
 
 def _file(value: str, label: str) -> Path:
     path = Path(value).expanduser().resolve()
@@ -29,6 +35,8 @@ def _output_dir(node_name: str, custom_dir: str = "") -> Path:
 
 
 class ScanpyQC:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Single-Cell"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
@@ -86,6 +94,8 @@ class ScanpyQC:
 
 
 class ScanpyNormalize:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Single-Cell"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING",)
@@ -120,6 +130,8 @@ class ScanpyNormalize:
 
 
 class ScanpyCluster:
+    OUTPUT_NODE = True
+    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Single-Cell"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "STRING")
