@@ -62,7 +62,7 @@ dist/
 
 # Data & Test results
 data/
-results/ß
+results/
 plots/
 *.tar.gz
 *.k2d
