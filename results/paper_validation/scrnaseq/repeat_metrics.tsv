@@ -1,0 +1,11 @@
+Comparison	Metric	Value	Tolerance	Status
+ComfyUI Run 1 vs Native Scanpy	HVG Jaccard Index	1.000000	1.000	PASS
+ComfyUI Run 1 vs Native Scanpy	PCA Coordinates Pearson r	1.000000	>= 0.9999	PASS
+ComfyUI Run 1 vs Native Scanpy	Leiden Clustering ARI	1.000000	1.000	PASS
+ComfyUI Run 1 vs Run 2	Leiden Clustering ARI	1.000000	1.000	PASS
+ComfyUI Run 2 vs Run 3	Leiden Clustering ARI	1.000000	1.000	PASS
+ComfyUI Run 1 vs Run 3	Leiden Clustering ARI	1.000000	1.000	PASS
+ComfyUI Run 1 vs Run 2	PCA Coordinates Pearson r	1.000000	>= 0.9999	PASS
+ComfyUI Run 2 vs Run 3	PCA Coordinates Pearson r	1.000000	>= 0.9999	PASS
+ComfyUI Run 1 vs Run 2	HVG Jaccard Index	1.000000	1.000	PASS
+ComfyUI Run 2 vs Run 3	HVG Jaccard Index	1.000000	1.000	PASS

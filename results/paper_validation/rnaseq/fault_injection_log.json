@@ -1,0 +1,20 @@
+[
+  {
+    "fault": "missing_r2",
+    "error_type": "FileNotFoundError",
+    "message": "Reverse mate file not found: /non/existent/path/R2.fq.gz",
+    "handled": true
+  },
+  {
+    "fault": "bad_binary",
+    "error_type": "FileNotFoundError",
+    "message": "Tool 'binary_tool_xyz' could not be resolved in any registered conda environment or system PATH.",
+    "handled": true
+  },
+  {
+    "fault": "metadata_mismatch",
+    "error_type": "ValueError",
+    "message": "At least 2 common sample IDs required between count matrix and metadata.\nCount matrix columns: ['SRR6357070', 'SRR6357072', 'SRR6357076', 'SRR6357077']\nMetadata samples: ['NON_EXISTENT_SAMPLE']\nCommon matching samples: []",
+    "handled": true
+  }
+]

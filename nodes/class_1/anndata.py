@@ -8,10 +8,15 @@ import json
 from pathlib import Path
 
 try:
-    from nodes.compat import ensure_pandas_compat
-    ensure_pandas_compat()
+    from ..compat import ensure_pandas_compat
 except Exception:
-    pass
+    try:
+        from nodes.compat import ensure_pandas_compat
+    except Exception:
+        def ensure_pandas_compat():
+            pass
+
+ensure_pandas_compat()
 
 
 def _file(value: str, label: str) -> Path:
@@ -23,7 +28,6 @@ def _file(value: str, label: str) -> Path:
 
 class AnnDataInspect:
     OUTPUT_NODE = True
-    OUPUT_NODE = True
     CATEGORY = "ComfyBIO/Single-Cell"
     FUNCTION = "run"
     RETURN_TYPES = ("STRING", "INT", "INT")
@@ -38,6 +42,7 @@ class AnnDataInspect:
         }
 
     def run(self, h5ad_file: str):
+        ensure_pandas_compat()
         import anndata as ad
         path = _file(h5ad_file, "AnnData (.h5ad)")
         adata = ad.read_h5ad(str(path), backed="r")

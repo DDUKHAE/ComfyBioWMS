@@ -41,13 +41,49 @@ def resolve_input_path(path_str: str) -> Path:
     return p.resolve()
 
 
+COMMON_BIO_EXTENSIONS = {
+    ".fa", ".fasta", ".fna", ".fastq", ".fq", ".gz", ".bam", ".sam", ".cram",
+    ".vcf", ".bcf", ".gff", ".gtf", ".bed", ".narrowpeak", ".broadpeak",
+    ".tsv", ".csv", ".txt", ".json", ".h5ad", ".sf", ".h5", ".loom",
+    ".tab", ".counts", ".matrix", ".mtx", ".sh", ".html", ".log",
+}
+
+
+def is_probable_path(p_str: str) -> bool:
+    """Determine if a string represents a file or directory path."""
+    if not p_str or len(p_str) > 4096:
+        return False
+    if any(sep in p_str for sep in ("/", "\\")):
+        return True
+    if p_str.startswith("."):
+        return True
+    p = Path(p_str)
+    if p.suffix.lower() in COMMON_BIO_EXTENSIONS:
+        return True
+    try:
+        if (Path.cwd() / p_str).exists():
+            return True
+        if resolve_input_path(p_str).exists():
+            return True
+    except Exception:
+        pass
+    return False
+
+
+# Upper bound on the number of files hashed per directory input. Directory scans that
+# reach this ceiling cannot prove the inputs are unchanged, so they force re-execution.
+MAX_DIR_SCAN_FILES = 20000
+
+
 def compute_input_fingerprint(*args: Any, **kwargs: Any) -> str:
     """Compute a deterministic input fingerprint for ComfyUI IS_CHANGED caching.
 
     Inspects all input parameters. For file/directory paths, captures normalized path,
-    file size, and modification time (st_mtime_ns).
-    If any referenced input file is missing, returns float('nan') or a unique token
-    to force re-execution.
+    file size, and modification time (st_mtime_ns). For directories, recursively
+    inspects child file sizes and mtimes to detect internal modifications (e.g. quant.sf).
+    If any referenced input file is missing, or a directory holds more than
+    MAX_DIR_SCAN_FILES files so the scan cannot cover them all, returns a unique token to
+    force re-execution.
     """
     hasher = hashlib.sha256()
 
@@ -63,19 +99,35 @@ def compute_input_fingerprint(*args: Any, **kwargs: Any) -> str:
         if isinstance(val, str):
             val_str = val.strip()
             # Check if this string looks like a path or comma-separated list of paths
-            if val_str and (val_str.startswith("/") or val_str.startswith("./") or val_str.startswith("../") or "/" in val_str or "\\" in val_str):
-                paths = [p.strip() for p in val_str.split(",") if p.strip()]
-                for p_str in paths:
+            tokens = [p.strip() for p in val_str.split(",") if p.strip()]
+            if tokens and all(is_probable_path(t) for t in tokens):
+                for p_str in tokens:
                     try:
-                        resolved = resolve_input_path(p_str)
+                        resolved = (Path.cwd() / p_str).resolve() if (Path.cwd() / p_str).exists() else resolve_input_path(p_str)
                         if resolved.is_file():
                             st = resolved.stat()
                             hasher.update(f"{key}:file:{resolved}:{st.st_size}:{st.st_mtime_ns};".encode("utf-8"))
                         elif resolved.is_dir():
                             st = resolved.stat()
-                            # Directory mtime and child summary
-                            children = sorted([c.name for c in resolved.iterdir() if not c.name.startswith(".")])[:50]
-                            hasher.update(f"{key}:dir:{resolved}:{st.st_mtime_ns}:{','.join(children)};".encode("utf-8"))
+                            hasher.update(f"{key}:dir:{resolved}:{st.st_mtime_ns};".encode("utf-8"))
+                            # Recursively inspect files inside directory to track content/size/mtime changes
+                            file_count = 0
+                            for child in sorted(resolved.rglob("*")):
+                                if any(part.startswith(".") for part in child.parts):
+                                    continue
+                                if child.is_file():
+                                    c_st = child.stat()
+                                    rel = child.relative_to(resolved)
+                                    hasher.update(f"f:{rel}:{c_st.st_size}:{c_st.st_mtime_ns};".encode("utf-8"))
+                                    file_count += 1
+                                    if file_count >= MAX_DIR_SCAN_FILES:
+                                        # Scan ceiling reached: the fingerprint no longer covers every
+                                        # input file, so force re-execution instead of silently
+                                        # reusing a cache entry that may be stale.
+                                        hasher.update(
+                                            f"{key}:dir_scan_truncated:{resolved}:{os.urandom(8).hex()};".encode("utf-8")
+                                        )
+                                        break
                         else:
                             # Missing file: mark non-existent to avoid false caching
                             hasher.update(f"{key}:missing:{p_str}:{os.urandom(8).hex()};".encode("utf-8"))

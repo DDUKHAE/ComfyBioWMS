@@ -1,0 +1,2 @@
+n_genes	valid_comparisons	lfc_max_diff	pvalue_max_diff	replay_duration_sec	identical_file_detected	status	reason
+125	434	0.0	0.0	5.729576826095581	False	PASS	All 434 numerical values within tolerance (rtol=1e-05, atol=1e-05). Max diff: 0.000e+00

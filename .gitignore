@@ -62,22 +62,51 @@ dist/
 
 # Data & Test results
 data/
-results/
 plots/
 *.tar.gz
 *.k2d
 *.kmer_distrib
+*.fastq
+*.fq
+
+# Ignore intermediate execution results, track only verified source tables & reports
+results/*
+!results/paper_validation/
+results/paper_validation/*
+!results/paper_validation/rnaseq/
+results/paper_validation/rnaseq/*
+!results/paper_validation/rnaseq/*.tsv
+!results/paper_validation/rnaseq/*.csv
+!results/paper_validation/rnaseq/*.py
+!results/paper_validation/rnaseq/*.json
+!results/paper_validation/rnaseq/*.md
+!results/paper_validation/scrnaseq/
+results/paper_validation/scrnaseq/*
+!results/paper_validation/scrnaseq/*.tsv
+!results/paper_validation/scrnaseq/*.csv
+!results/paper_validation/scrnaseq/*.py
+!results/paper_validation/scrnaseq/*.json
+!results/paper_validation/scrnaseq/*.md
+!results/overhead_benchmark/
+results/overhead_benchmark/*
+!results/overhead_benchmark/*.json
+!results/overhead_benchmark/*.tsv
+!results/overhead_benchmark/*.md
+!results/validation/
+results/validation/*
+!results/validation/*.md
 
 # Benchmarks results directory
 paper_platform/benchmarks/results/
 paper_platform/benchmarks/results_cli/
 paper_platform/benchmarks/data/
 
-# Never push
-manuscript.md
+# Local draft documents
 manuscript.docx
-plots/
+manuscript.md
+paper_platform/
+
+# Submission-side documents kept out of the public repository
+# (node verification matrix, case-study protocols, reproducibility guide and
+#  internal review records travel with the manuscript as supplementary files)
 docs/
-tests/
-results/
-data/

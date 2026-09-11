@@ -1,0 +1,5 @@
+sample_id,fastq_1,fastq_2,condition
+SRR6357070,data/nf_core_rnaseq/SRR6357070_1.fastq.gz,data/nf_core_rnaseq/SRR6357070_2.fastq.gz,WT
+SRR6357072,data/nf_core_rnaseq/SRR6357072_1.fastq.gz,data/nf_core_rnaseq/SRR6357072_2.fastq.gz,WT
+SRR6357076,data/nf_core_rnaseq/SRR6357076_1.fastq.gz,data/nf_core_rnaseq/SRR6357076_2.fastq.gz,RAP1_IAA_30M
+SRR6357077,data/nf_core_rnaseq/SRR6357077_1.fastq.gz,data/nf_core_rnaseq/SRR6357077_2.fastq.gz,RAP1_IAA_30M

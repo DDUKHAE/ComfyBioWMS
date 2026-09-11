@@ -1,0 +1,10 @@
+Neighbors_k	Resolution	N_Clusters	Silhouette_Score	ARI_vs_Baseline	ARI_vs_Author	Configuration
+10	0.3	8	0.2439	0.8815	0.6271	Perturbation
+10	0.5	10	0.2256	0.8634	0.6160	Perturbation
+10	0.8	15	0.1537	0.5497	0.4251	Perturbation
+15	0.3	7	0.2357	0.8607	0.6038	Perturbation
+15	0.5	10	0.2359	1.0000	0.5851	Reference
+15	0.8	15	0.1699	0.6684	0.4440	Perturbation
+30	0.3	7	0.2413	0.8109	0.6315	Perturbation
+30	0.5	8	0.2457	0.8683	0.6683	Perturbation
+30	0.8	12	0.2229	0.8227	0.5319	Perturbation

@@ -1,0 +1,25 @@
+{
+  "domain": "single_cell_rnaseq",
+  "dataset": {
+    "source": "theislab/scvelo_notebooks (Bastidas-Ponce et al. 2019)",
+    "file": "data/Pancreas/endocrinogenesis_day15.h5ad",
+    "sha256": "9e3e459eca00ba06b496ec80def32941b5b2889918720e3e7aa6ffb811fbe7c6",
+    "cells_total": 3696,
+    "genes_total": 27998,
+    "organism": "Mus musculus (E15.5 embryonic pancreas)"
+  },
+  "claim_boundary": "Computational reproducibility against native Python Scanpy, marker recovery, and lineage trajectory consistency on the E15.5 subset. Not claimed as full multi-timepoint study reproduction.",
+  "tolerances": {
+    "computational_ari": 1.0,
+    "pca_correlation": 0.9999,
+    "cell_count_equality": 0
+  },
+  "experiments": [
+    {"id": "S-01", "name": "AnnData Structure & Raw Count Verification"},
+    {"id": "S-02", "name": "ComfyUI Nodes vs Independent Native Scanpy"},
+    {"id": "S-03", "name": "3x Repeatability & Determinism Verification"},
+    {"id": "S-04", "name": "Marker-based Cell Type Annotation & Confusion Matrix"},
+    {"id": "S-05", "name": "Endocrine Lineage PAGA Graph and DPT Pseudotime"},
+    {"id": "S-06", "name": "Sensitivity Audit Across Clustering Resolutions and Neighbors"}
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "domain": "bulk_rnaseq",
+  "dataset": {
+    "accession": "GSE110004",
+    "organism": "Saccharomyces cerevisiae",
+    "reference_scope": "Chromosome I (genome.fasta, transcriptome.fasta, genes.gtf)",
+    "runs": [
+      {
+        "sample_id": "SRR6357070",
+        "condition": "WT",
+        "read_pairs": 50000
+      },
+      {
+        "sample_id": "SRR6357072",
+        "condition": "WT",
+        "read_pairs": 50000
+      },
+      {
+        "sample_id": "SRR6357076",
+        "condition": "RAP1_IAA_30M",
+        "read_pairs": 50000
+      },
+      {
+        "sample_id": "SRR6357077",
+        "condition": "RAP1_IAA_30M",
+        "read_pairs": 50000
+      }
+    ]
+  },
+  "claim_boundary": "Execution, numerical concordance with native CLI/R, fault injection handling, and provenance replay. Not claimed as full transcriptome biological discovery.",
+  "tolerances": {
+    "integer_reads": 0,
+    "effective_counts_max_abs_diff": 0.31,
+    "effective_counts_note": "Post-hoc technical bound adopted after observing the run, not a pre-registered tolerance: Python vs R Bioconductor tximport lengthScaledTPM counts differ by at most 0.301 in absolute value, and 36/500 entries exceed the pre-registered 1e-5 rtol / 1e-4 atol, so the count matrix is a partial match at the original tolerance. The origin of the difference was not decomposed and is therefore not attributed. Integer-rounded counts handed to DESeq2 match on all 500 entries, yielding 0.00e+00 delta in LFC and Wald p-values.",
+    "tpm_rtol": 1e-05,
+    "tpm_atol": 5e-05,
+    "lfc_rtol": 0.0001,
+    "lfc_atol": 0.0001,
+    "pvalue_rtol": 0.0001,
+    "pvalue_atol": 0.0001,
+    "effective_counts_pre_registered_rtol": 1e-05,
+    "effective_counts_pre_registered_atol": 0.0001,
+    "effective_counts_entries_exceeding_pre_registered_tolerance": 36,
+    "effective_counts_total_entries": 500
+  },
+  "experiments": [
+    {
+      "id": "R-01",
+      "name": "ComfyUI Node Registration and Runtime Smoke"
+    },
+    {
+      "id": "R-02",
+      "name": "ComfyUI End-to-End Pipeline Execution"
+    },
+    {
+      "id": "R-03",
+      "name": "Native CLI / Bioconductor Concordance"
+    },
+    {
+      "id": "R-04",
+      "name": "3x Repeatability and IS_CHANGED Cache Benchmark"
+    },
+    {
+      "id": "R-05",
+      "name": "Controlled Parameter and Input Perturbation"
+    },
+    {
+      "id": "R-06",
+      "name": "Fault Injections (Missing R2, Bad Binary, Metadata Mismatch)"
+    },
+    {
+      "id": "R-07",
+      "name": "Provenance Manifest Independent Replay"
+    }
+  ]
+}

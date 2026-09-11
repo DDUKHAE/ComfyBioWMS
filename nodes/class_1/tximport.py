@@ -183,6 +183,12 @@ class Tximport:
 
         sorted_genes = sorted(all_genes)
 
+        # Compute rowMeans(lengthMat) across samples for Bioconductor tximport equivalence
+        mean_gene_lengths = {}
+        for g in sorted_genes:
+            lens = [gene_lengths_by_sample[s].get(g, 1000.0) for s in samples]
+            mean_gene_lengths[g] = sum(lens) / len(lens) if lens else 1000.0
+
         # Apply countsFromAbundance method (lengthScaledTPM / scaledTPM / no)
         final_counts = {}
         for s_name in samples:
@@ -191,13 +197,13 @@ class Tximport:
             s_lens = gene_lengths_by_sample[s_name]
 
             if counts_from_abundance == "lengthScaledTPM":
-                # Bioconductor tximport: scale TPM * length by library total counts
+                # Bioconductor tximport: scale TPM * mean_length by library total counts
                 total_counts = sum(s_counts.get(g, 0.0) for g in sorted_genes)
-                sum_tpm_len = sum(s_tpm.get(g, 0.0) * s_lens.get(g, 1000.0) for g in sorted_genes) or 1.0
+                sum_tpm_len = sum(s_tpm.get(g, 0.0) * mean_gene_lengths[g] for g in sorted_genes) or 1.0
                 scale_factor = total_counts / sum_tpm_len
                 scaled = {}
                 for g in sorted_genes:
-                    scaled[g] = s_tpm.get(g, 0.0) * s_lens.get(g, 1000.0) * scale_factor
+                    scaled[g] = s_tpm.get(g, 0.0) * mean_gene_lengths[g] * scale_factor
                 final_counts[s_name] = scaled
             elif counts_from_abundance == "scaledTPM":
                 # scaledTPM: scale TPM by median transcript length

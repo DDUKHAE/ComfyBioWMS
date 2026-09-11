@@ -19,9 +19,12 @@ if str(_ENGINE_SRC) not in sys.path:
 
 # Apply backwards compatibility shims (e.g. pandas 2.x/3.x legacy unpickling support)
 try:
-    import nodes.compat  # noqa: F401
+    from .nodes import compat  # noqa: F401
 except Exception:
-    pass
+    try:
+        import nodes.compat  # noqa: F401
+    except Exception:
+        pass
 
 logger = logging.getLogger("ComfyBIOWMS")
 

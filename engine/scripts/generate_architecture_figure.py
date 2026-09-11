@@ -8,157 +8,205 @@ def generate_figure(out_png='figures/fig1_system_architecture.png', out_jpg='fig
     plt.rcParams['font.family'] = 'sans-serif'
     plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Helvetica']
 
-    fig_w, fig_h = 8.5, 10.3
+    fig_w, fig_h = 8.8, 9.6
     dpi = 300
 
     fig, ax = plt.subplots(figsize=(fig_w, fig_h), dpi=dpi)
     ax.set_facecolor('#ffffff')
     fig.patch.set_facecolor('#ffffff')
 
-    def draw_rounded_box(x, y, w, h, title, subtitle=None, bg='#ffffff', border='#000000', lw=2.0, radius=0.035, title_fs=12.5, sub_fs=9.5):
-        box = patches.FancyBboxPatch(
-            (x - w/2.0, y - h/2.0), w, h,
-            boxstyle=f"round,pad=0.0,rounding_size={radius}",
-            facecolor=bg, edgecolor=border, linewidth=lw, zorder=3
-        )
-        ax.add_patch(box)
-        if subtitle:
-            ax.text(x, y + h*0.14, title, ha='center', va='center', fontsize=title_fs, fontweight='bold', color='#000000', zorder=4)
-            ax.text(x, y - h*0.18, subtitle, ha='center', va='center', fontsize=sub_fs, color='#334155', zorder=4)
-        else:
-            ax.text(x, y, title, ha='center', va='center', fontsize=title_fs, fontweight='bold', color='#000000', zorder=4)
-        return box
-
-    def draw_rect_box(x, y, w, h, title, subtitle=None, bg='#ffffff', border='#000000', lw=2.0, title_fs=10.0, sub_fs=7.8):
-        box = patches.Rectangle(
-            (x - w/2.0, y - h/2.0), w, h,
-            facecolor=bg, edgecolor=border, linewidth=lw, zorder=3
-        )
-        ax.add_patch(box)
-        if subtitle:
-            ax.text(x, y + h*0.16, title, ha='center', va='center', fontsize=title_fs, fontweight='bold', color='#000000', zorder=4)
-            ax.text(x, y - h*0.18, subtitle, ha='center', va='center', fontsize=sub_fs, color='#334155', zorder=4)
-        else:
-            ax.text(x, y, title, ha='center', va='center', fontsize=title_fs, fontweight='bold', color='#000000', zorder=4)
-        return box
-
-    def draw_arrow(x1, y1, x2, y2, color='#000000', lw=1.8):
+    def draw_arrow(x1, y1, x2, y2, color='#000000', lw=1.8, style='-|>'):
         ax.annotate(
             '', xy=(x2, y2), xytext=(x1, y1),
             arrowprops=dict(
-                arrowstyle='-|>',
+                arrowstyle=style,
                 color=color,
                 lw=lw,
-                mutation_scale=15,
+                mutation_scale=13,
             ),
-            zorder=5
+            zorder=6
         )
 
-    # 1. Top Shape: Input (Rounded rectangle)
-    y_input = 0.940
-    w_input, h_input = 0.88, 0.070
-    draw_rounded_box(0.50, y_input, w_input, h_input,
-                     "Biological Data / Analysis Parameters",
-                     "(FASTQ, BAM, FASTA, Metadata CSV, Filtering Cutoffs)",
-                     lw=2.0, title_fs=12.5, sub_fs=9.2)
+    # -------------------------------------------------------------
+    # 1. Top Shape: Biological Data & Analysis Parameters (Rounded Box)
+    # -------------------------------------------------------------
+    y_input = 0.932
+    w_input, h_input = 0.880, 0.066
+    r_box = patches.FancyBboxPatch(
+        (0.50 - w_input/2.0, y_input - h_input/2.0), w_input, h_input,
+        boxstyle="round,pad=0.0,rounding_size=0.025",
+        facecolor='#ffffff', edgecolor='#000000', linewidth=2.0, zorder=3
+    )
+    ax.add_patch(r_box)
+    ax.text(0.50, y_input + 0.013, "Biological Data & Analysis Parameters",
+            ha='center', va='center', fontsize=11.2, fontweight='bold', color='#000000', zorder=4)
+    ax.text(0.50, y_input - 0.014, "(Paired FASTQ, BAM, FASTA, H5AD AnnData, Metadata Samplesheet CSV, User Filtering Cutoffs)",
+            ha='center', va='center', fontsize=8.2, color='#333333', zorder=4)
 
-    # 2. Outer Dashed Box
-    dash_x, dash_y = 0.02, 0.125
-    dash_w, dash_h = 0.96, 0.770
+    # Arrow Input -> DAG
+    y_dag = 0.814
+    w_dag, h_dag = 0.880, 0.066
+    draw_arrow(0.50, y_input - h_input/2.0, 0.50, y_dag + h_dag/2.0, color='#000000', lw=1.8)
+
+    # -------------------------------------------------------------
+    # 2. ComfyUI DAG Engine & Scheduling Layer
+    # -------------------------------------------------------------
+    dag_box = patches.Rectangle(
+        (0.50 - w_dag/2.0, y_dag - h_dag/2.0), w_dag, h_dag,
+        facecolor='#ffffff', edgecolor='#000000', linewidth=2.0, zorder=3
+    )
+    ax.add_patch(dag_box)
+    ax.text(0.50, y_dag + 0.013, "ComfyUI Directed Acyclic Graph (DAG) Engine & Async Queue",
+            ha='center', va='center', fontsize=10.6, fontweight='bold', color='#000000', zorder=4)
+    ax.text(0.50, y_dag - 0.014, "Interactive Node Canvas (LiteGraph) • Topological Dependency Graph • Async Task Scheduling",
+            ha='center', va='center', fontsize=8.0, color='#333333', zorder=4)
+
+    # -------------------------------------------------------------
+    # 3. Outer Execution Container (Dashed Box with Solid Header Banner)
+    # -------------------------------------------------------------
+    dash_x = 0.035
+    dash_y = 0.160
+    dash_w = 0.930
+    dash_h = 0.550
     dash_box = patches.Rectangle(
         (dash_x, dash_y), dash_w, dash_h,
         facecolor='none', edgecolor='#000000', linestyle='--', linewidth=1.5, zorder=1
     )
     ax.add_patch(dash_box)
 
-    # 3. Top row: Class 1, Class 2, Class 3
-    y_row1 = 0.785
-    h_row1 = 0.100
-    w_class = 0.275
+    # Subsystem Header Banner at top of outer container
+    h_sub_hdr = 0.044
+    y_sub_hdr = dash_y + dash_h - h_sub_hdr/2.0  # 0.688
+    sub_hdr_box = patches.Rectangle(
+        (dash_x, dash_y + dash_h - h_sub_hdr), dash_w, h_sub_hdr,
+        facecolor='#ffffff', edgecolor='#000000', linewidth=1.8, zorder=3
+    )
+    ax.add_patch(sub_hdr_box)
+    ax.text(0.50, y_sub_hdr,
+            "ComfyBIOWMS Custom Node Execution Architecture (98 Active Registered Nodes)",
+            ha='center', va='center', fontsize=9.6, fontweight='bold', color='#000000', zorder=4)
 
-    x_c1 = 0.185
-    x_c2 = 0.500
-    x_c3 = 0.815
+    # Arrow DAG -> Subsystem Header
+    draw_arrow(0.50, y_dag - h_dag/2.0, 0.50, dash_y + dash_h, color='#000000', lw=1.8)
 
-    # Class 1
-    draw_rect_box(x_c1, y_row1, w_class, h_row1,
-                  "Class 1: Pure Python Core",
-                  "Path Validation, Metadata Parsing\n& Graph Routing",
-                  lw=2.0, title_fs=9.8, sub_fs=7.8)
+    # Column x positions and width
+    x_c1 = 0.275
+    x_c2 = 0.725
+    w_col = 0.420
 
-    # Class 2
-    draw_rect_box(x_c2, y_row1, w_class, h_row1,
-                  "Class 2: Direct Python Libs",
-                  "In-Memory Library Operations\n(Biopython, Scanpy, Matplotlib)",
-                  lw=2.0, title_fs=9.8, sub_fs=7.8)
+    # Arrows from Subsystem Header down into Class 1 and Class 2
+    y_sub_bot = dash_y + dash_h - h_sub_hdr  # 0.666
+    y_c_hdr = 0.598
+    h_c_hdr = 0.058
+    y_c_hdr_top = y_c_hdr + h_c_hdr/2.0     # 0.627
+    draw_arrow(x_c1, y_sub_bot, x_c1, y_c_hdr_top, color='#000000', lw=1.6)
+    draw_arrow(x_c2, y_sub_bot, x_c2, y_c_hdr_top, color='#000000', lw=1.6)
 
-    # Class 3
-    draw_rect_box(x_c3, y_row1, w_class, h_row1,
-                  "Class 3: Isolated Binary CLI",
-                  "External Multi-Omics Binaries\n(BWA, SPAdes, MACS3, Kraken2)",
-                  lw=2.0, title_fs=9.8, sub_fs=7.8)
+    # -------------------------------------------------------------
+    # 4. Left Column: In-Memory Processing & Visualization
+    # -------------------------------------------------------------
+    hdr_c1 = patches.Rectangle(
+        (x_c1 - w_col/2.0, y_c_hdr - h_c_hdr/2.0), w_col, h_c_hdr,
+        facecolor='#ffffff', edgecolor='#000000', linewidth=1.8, zorder=3
+    )
+    ax.add_patch(hdr_c1)
+    ax.text(x_c1, y_c_hdr + 0.012, "Python In-Memory Processing & Visualization",
+            ha='center', va='center', fontsize=9.2, fontweight='bold', color='#000000', zorder=4)
+    ax.text(x_c1, y_c_hdr - 0.013, "Direct In-Memory Execution • Low-Latency Scientific Analytics",
+            ha='center', va='center', fontsize=7.4, color='#333333', zorder=4)
 
-    # Arrows from Top Input to Class 1, 2, 3
-    y_split = 0.880
-    ax.plot([0.50, 0.50], [y_input - h_input/2.0, y_split], color='#000000', lw=1.8, zorder=4)
-    ax.plot([x_c1, x_c3], [y_split, y_split], color='#000000', lw=1.8, zorder=4)
-    draw_arrow(x_c1, y_split, x_c1, y_row1 + h_row1/2.0)
-    draw_arrow(x_c2, y_split, x_c2, y_row1 + h_row1/2.0)
-    draw_arrow(x_c3, y_split, x_c3, y_row1 + h_row1/2.0)
+    # Arrow Header -> Main Box
+    y_main = 0.354
+    h_main = 0.344
+    draw_arrow(x_c1, y_c_hdr - h_c_hdr/2.0, x_c1, y_main + h_main/2.0, color='#000000', lw=1.6)
 
-    # 4. Conda Runner (Middle box below Class 2 & 3)
-    y_conda = 0.590
-    w_mid = 0.590
-    h_conda = 0.100
-    x_mid = 0.6575
-    draw_rect_box(x_mid, y_conda, w_mid, h_conda,
-                  "CondaRunner Execution Bridge",
-                  "Command Tokenization (shlex), Safe Subprocess Dispatch\n& Unicode Path Normalization",
-                  lw=2.0, title_fs=11.0, sub_fs=8.3)
+    # Main Box 1: Analytics Engine
+    box_c1_main = patches.Rectangle(
+        (x_c1 - w_col/2.0, y_main - h_main/2.0), w_col, h_main,
+        facecolor='#ffffff', edgecolor='#000000', linewidth=1.6, zorder=3
+    )
+    ax.add_patch(box_c1_main)
+    x_c1_text = x_c1 - w_col/2.0 + 0.016
+    ax.text(x_c1, y_main + h_main/2.0 - 0.024, "In-Memory Scientific Analytics & Visualization",
+            ha='center', va='center', fontsize=9.3, fontweight='bold', color='#000000', zorder=4)
 
-    # Merge line from Class 2 and Class 3 into Conda Runner
-    y_merge = 0.690
-    ax.plot([x_c2, x_c2], [y_row1 - h_row1/2.0, y_merge], color='#000000', lw=1.8, zorder=4)
-    ax.plot([x_c3, x_c3], [y_row1 - h_row1/2.0, y_merge], color='#000000', lw=1.8, zorder=4)
-    ax.plot([x_c2, x_c3], [y_merge, y_merge], color='#000000', lw=1.8, zorder=4)
-    draw_arrow(x_mid, y_merge, x_mid, y_conda + h_conda/2.0)
+    bullets_c1 = [
+        "• Direct In-Memory Arrays: Zero-IPC Python execution",
+        "• Biopython: Alignment stats, GC metrics, pairwise search",
+        "• Single-Cell: Scanpy, AnnData inspect, HVG, PCA, Leiden",
+        "• Transcriptomics: Tximport count matrix aggregation",
+        "• Interactive Visualization: 300+ DPI IMAGE canvas preview",
+        "• Input Validation: Samplesheet CSV & path verification",
+        "• In-Memory Passing: High-speed NumPy & Pandas flow",
+        "• Ultra-Low Latency: Instantaneous node evaluation",
+    ]
+    y_start_c1 = y_main + h_main/2.0 - 0.056
+    for i, b in enumerate(bullets_c1):
+        ax.text(x_c1_text, y_start_c1 - i * 0.037, b,
+                ha='left', va='center', fontsize=7.4, color='#1e293b', zorder=4)
 
-    # 5. CLI Subprocess
-    y_cli = 0.420
-    h_cli = 0.100
-    draw_rect_box(x_mid, y_cli, w_mid, h_cli,
-                  "CLI Subprocess Execution",
-                  "12 Isolated Conda Environments, Process Containment\n& Exit Code Verification (exit code = 0)",
-                  lw=2.0, title_fs=11.0, sub_fs=8.3)
+    # -------------------------------------------------------------
+    # 5. Right Column: Isolated Binary CLI & BioCommandRunner
+    # -------------------------------------------------------------
+    hdr_c2 = patches.Rectangle(
+        (x_c2 - w_col/2.0, y_c_hdr - h_c_hdr/2.0), w_col, h_c_hdr,
+        facecolor='#ffffff', edgecolor='#000000', linewidth=1.8, zorder=3
+    )
+    ax.add_patch(hdr_c2)
+    ax.text(x_c2, y_c_hdr + 0.012, "External Tool CLI & Conda Isolation",
+            ha='center', va='center', fontsize=9.2, fontweight='bold', color='#000000', zorder=4)
+    ax.text(x_c2, y_c_hdr - 0.013, "Dedicated Conda Environments • Subprocess Containment",
+            ha='center', va='center', fontsize=7.4, color='#333333', zorder=4)
 
-    # Arrow Conda Runner -> CLI Subprocess
-    draw_arrow(x_mid, y_conda - h_conda/2.0, x_mid, y_cli + h_cli/2.0)
+    # Arrow Header -> Main Box
+    draw_arrow(x_c2, y_c_hdr - h_c_hdr/2.0, x_c2, y_main + h_main/2.0, color='#000000', lw=1.6)
 
-    # 6. Data Management & Memory Protection (Wide box at bottom of dashed area)
-    y_dm = 0.210
-    w_dm = 0.880
-    h_dm = 0.100
-    draw_rect_box(0.50, y_dm, w_dm, h_dm,
-                  "Data Management & Memory Protection",
-                  "Zero-Memory-Bloat STRING Path Streaming (NVMe Storage)\n& Native PyTorch IMAGE Tensor Generation (1, H, W, 3) for Real-Time Canvas Preview",
-                  lw=2.0, title_fs=11.2, sub_fs=8.4)
+    # Main Box 2: BioCommandRunner Bridge & Conda Isolation
+    box_c2_main = patches.Rectangle(
+        (x_c2 - w_col/2.0, y_main - h_main/2.0), w_col, h_main,
+        facecolor='#ffffff', edgecolor='#000000', linewidth=1.6, zorder=3
+    )
+    ax.add_patch(box_c2_main)
+    x_c2_text = x_c2 - w_col/2.0 + 0.016
+    ax.text(x_c2, y_main + h_main/2.0 - 0.024, "BioCommandRunner & Conda Execution Bridge",
+            ha='center', va='center', fontsize=9.3, fontweight='bold', color='#000000', zorder=4)
 
-    # Arrow from Class 1 directly down to Data Management
-    draw_arrow(x_c1, y_row1 - h_row1/2.0, x_c1, y_dm + h_dm/2.0)
+    bullets_c2 = [
+        "• Safe CLI Tokenization: shlex.split (shell=False execution)",
+        "• Vulnerability Prevention: Command injection immunity",
+        "• Dedicated Conda Envs: Fastp, STAR, Salmon, BWA-MEM2,",
+        "  SPAdes, MACS3, DESeq2 (R 4.5), Samtools, BCFtools",
+        "• Subprocess Dispatch: conda run -n [env] --no-capture-output",
+        "• Process Control: Exit code check & live log stream",
+        "• Audit Logging: Auto-generated run_manifest.sh & json",
+        "• Provenance Replay: Independent CLI reproduction",
+    ]
+    y_start_c2 = y_main + h_main/2.0 - 0.056
+    for i, b in enumerate(bullets_c2):
+        ax.text(x_c2_text, y_start_c2 - i * 0.037, b,
+                ha='left', va='center', fontsize=7.4, color='#1e293b', zorder=4)
 
-    # Arrow from CLI Subprocess down to Data Management
-    draw_arrow(x_mid, y_cli - h_cli/2.0, x_mid, y_dm + h_dm/2.0)
+    # -------------------------------------------------------------
+    # 6. Bottom Shape: Analysis Outputs & Provenance Artifacts
+    # -------------------------------------------------------------
+    y_output = 0.052
+    w_output, h_output = 0.880, 0.066
+    out_box = patches.FancyBboxPatch(
+        (0.50 - w_output/2.0, y_output - h_output/2.0), w_output, h_output,
+        boxstyle="round,pad=0.0,rounding_size=0.025",
+        facecolor='#ffffff', edgecolor='#000000', linewidth=2.0, zorder=3
+    )
+    ax.add_patch(out_box)
+    ax.text(0.50, y_output + 0.013, "Analysis Outputs & Provenance Artifacts",
+            ha='center', va='center', fontsize=11.2, fontweight='bold', color='#000000', zorder=4)
+    ax.text(0.50, y_output - 0.014, "(Verified Artifacts: BAM, VCF, Counts TSV, run_manifest.sh • In-Memory AnnData, Tables & Reports)",
+            ha='center', va='center', fontsize=8.2, color='#333333', zorder=4)
 
-    # 7. Bottom Shape: Analysis Output (Rounded rectangle)
-    y_output = 0.055
-    w_output, h_output = 0.88, 0.070
-    draw_rounded_box(0.50, y_output, w_output, h_output,
-                     "Analysis Outputs & Interactive Previews",
-                     "(Header-Stripped SHA-256 Validated BAM, VCF, TSV & 300+ DPI Canvas Tensors)",
-                     lw=2.0, title_fs=12.5, sub_fs=9.2)
-
-    # Arrow from Data Management down to Analysis Output
-    draw_arrow(0.50, y_dm - h_dm/2.0, 0.50, y_output + h_output/2.0)
+    # Arrows from Class 1 and Class 2 down into Output Box
+    y_main_bot = y_main - h_main/2.0  # 0.182
+    y_out_top = y_output + h_output/2.0  # 0.085
+    draw_arrow(x_c1, y_main_bot, x_c1, y_out_top, color='#000000', lw=1.6)
+    draw_arrow(x_c2, y_main_bot, x_c2, y_out_top, color='#000000', lw=1.6)
 
     ax.set_xlim(0.0, 1.0)
     ax.set_ylim(0.0, 1.0)
@@ -168,7 +216,7 @@ def generate_figure(out_png='figures/fig1_system_architecture.png', out_jpg='fig
     plt.savefig(out_png, dpi=dpi, bbox_inches='tight', pad_inches=0.04, facecolor='#ffffff')
     plt.savefig(out_jpg, dpi=dpi, bbox_inches='tight', pad_inches=0.04, facecolor='#ffffff')
     plt.close()
-    print(f"Generated Figure 1 matching user's clean layout at {out_png}")
+    print(f"Generated Figure 1 (Streamlined Black Theme) at {out_png}")
 
 if __name__ == '__main__':
     generate_figure()

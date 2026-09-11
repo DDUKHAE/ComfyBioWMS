@@ -63,6 +63,8 @@ Icon = ""
 pythonpath = [".", "engine/src"]
 testpaths = ["tests"]
 python_files = [
+    "test_comparator_fault_injection.py",
+    "test_comfyui_graph_execution.py",
     "test_execution_contract.py",
     "test_native_concordance.py",
     "test_comfyui_integration.py",

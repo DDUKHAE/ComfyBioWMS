@@ -1,0 +1,8 @@
+{
+  "native_cli_avg_sec": 2.176,
+  "native_cli_peak_rss_kb": 1084272.0,
+  "comfybio_avg_sec": 2.144,
+  "overhead_sec": -0.032,
+  "overhead_percent": -1.47,
+  "backend_memory_rss_mb": 18.31
+}

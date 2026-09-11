@@ -1,131 +1,154 @@
+"""Generate Figure 2: Hierarchical Tree Diagram of ComfyBIOWMS 10 Functional Modules (98 Nodes).
+
+This script constructs a publication-grade hierarchical tree visualization (Figure 2)
+faithfully representing all 98 active custom nodes registered in ComfyBIOWMS,
+categorized into 10 bioinformatic functional modules with exact node counts.
+"""
+
 import os
+import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path
 
-GOLDEN_WORKFLOW_DATA = [
+DOMAINS_DATA = [
     {
-        "name": "Biopython & Sequence Ops",
-        "total_count": 26,
-        "nodes": [
-            "BiopythonSeqIONode (Multi-Format Sequence Parser)",
-            "BiopythonBlastNode (NCBI Local/Remote BLAST Search)",
-            "Primer3DesignNode (Automated PCR Primer Designer)",
-            "BiopythonBioPDBNode (3D Macromolecular Structure Parser)",
-            "LogomakerVisualizerNode (Sequence Logo & Motif Visualizer)"
-        ]
-    },
-    {
-        "name": "Single-Cell & Spatial Omics",
-        "total_count": 19,
-        "nodes": [
-            "ScanpyQCNode (Mitochondrial & Gene Count Quality Filter)",
-            "ScanpyNormalizeNode (Total Counts & Log1p Normalization)",
-            "ScanpyClusterNode (Leiden & Louvain Community Detection)",
-            "ScanpyMarkerGenesNode (Differential Marker Gene Ranking)",
-            "ScRNAVisualizationNode & Report (UMAP Plot & QC Report)"
-        ]
-    },
-    {
-        "name": "Genome Assembly & Long-Read",
-        "total_count": 19,
-        "nodes": [
-            "SampleMetadataValidatorNode (FASTQ/FASTA Integrity Check)",
-            "FastpTrimNode (Paired-End Quality & Adapter Trim)",
-            "SpadesAssembleNode (Multi k-mer De Bruijn Graph Assembly)",
-            "QuastQcNode (Contig Metrics, N50 & Misassembly QC)",
-            "AssemblyVisualizationNode & Report (Bandage Graph & Summary)"
-        ]
-    },
-    {
-        "name": "Epigenomics & Functional Screening",
+        "name": "Quality Control & Read Preprocessing",
         "total_count": 17,
+        "color": "#0d9488",      # Teal
+        "bg_color": "#ccfbf1",
         "nodes": [
-            "SampleMetadataValidatorNode (Paired FASTQ & Ref Genome Check)",
-            "FastpTrimNode (Poly-G & Adapter Read Trimming)",
-            "BwaMem2AlignNode (Paired-End Alignment Engine)",
-            "MarkDuplicatesNode & Filter (Optical Duplicates & MAPQ)",
-            "Macs3PeakCallingNode (BAMPE Open Chromatin Peak Caller)",
-            "AtacPeakVisualizationNode & Report (Signal Track & Summary)"
+            "FastQC & MultiQC",
+            "Fastp, Trimmomatic & TrimGalore",
+            "SortMeRNA & BBSplit",
+            "CatFastq, InferStrandedness & UmiToolsExtract",
+            "Preseq, QualimapRNASeq & DupRadar",
+            "DESeq2SampleQC & RSeQC (GeneBodyCoverage, InferExperiment, JunctionSaturation)",
         ]
     },
     {
-        "name": "Metagenome & Pathogen Virome",
-        "total_count": 18,
+        "name": "Sequence Alignment & Coordinate Processing",
+        "total_count": 13,
+        "color": "#2563eb",      # Blue
+        "bg_color": "#dbeafe",
         "nodes": [
-            "SampleMetadataValidatorNode (FASTQ & DB Integrity Check)",
-            "FastpTrimNode (Quality & Length Filtering)",
-            "Kraken2ClassifyNode (Exact k-mer Taxonomic Classifier)",
-            "BrackenAbundanceNode (Bayesian Abundance Re-Estimation)",
-            "MetagenomeVisualizationNode & Report (Krona / Stacked & Summary)"
+            "STARAlignReads & STARGenomeGenerate",
+            "HISAT2Align & HISAT2Build",
+            "Bowtie2Align & Bowtie2Build",
+            "BwaMem2Align & BwaMem2Index",
+            "SamtoolsSort, SamtoolsIndex & SamtoolsMarkdup",
+            "PicardMarkDuplicates & UmiToolsDedup",
         ]
     },
     {
-        "name": "Bulk RNA-Seq & Core Pipeline",
-        "total_count": 20,
+        "name": "De Novo Assembly & Structure Assessment",
+        "total_count": 5,
+        "color": "#d97706",      # Amber
+        "bg_color": "#fef3c7",
         "nodes": [
-            "SampleMetadataValidatorNode (Samplesheet & Path Validator)",
-            "FastpTrimNode (Automated Quality & Poly-G Read Trimming)",
-            "SalmonIndexNode & SalmonQuantNode (Quasi-Mapping Quantifier)",
-            "TximportNode (Gene-Level Count Matrix Summarizer)",
-            "DESeq2AnalysisNode (Negative Binomial GLM Differential Expression)",
-            "DESeq2VisualizationNode & Report (Volcano/PCA & Audit Report)"
+            "Spades",
+            "FlyeAssemble & HifiasmAssemble",
+            "StringTie",
+            "Quast",
         ]
     },
     {
-        "name": "Publication Quality Visualizers",
-        "total_count": 20,
+        "name": "Expression Quantification & Statistical Modeling",
+        "total_count": 8,
+        "color": "#4f46e5",      # Indigo
+        "bg_color": "#e0e7ff",
         "nodes": [
-            "VolcanoPlotVisualizerNode (DEG Significance Volcano Plot)",
-            "ManhattanPlotVisualizerNode (GWAS P-Value Manhattan Plot)",
-            "ClustermapHeatmapVisualizerNode (Hierarchical Clustermap)",
-            "UmapScatterVisualizerNode (Single-Cell UMAP Embeddings)",
-            "GseaEnrichmentPlotVisualizerNode (Running Enrichment Score Curves)"
+            "SalmonQuantReads, SalmonQuantAlignment & SalmonIndex",
+            "KallistoQuant & RSEMCalculateExpression",
+            "Tximport & DESeq2",
+            "GSEAPathway",
         ]
     },
     {
-        "name": "CADD & Structural Biology",
-        "total_count": 18,
+        "name": "Variant Calling & Genomic Interval Arithmetic",
+        "total_count": 8,
+        "color": "#059669",      # Emerald
+        "bg_color": "#d1fae5",
         "nodes": [
-            "ColabFoldAlphaFoldNode (MMseqs2 Accelerated 3D Structure)",
-            "ESMFoldNode (Large Protein Language Model Folding)",
-            "DiffDockPredictNode (Generative Blind Ligand Docking)",
-            "AutoDockVinaDockingNode (Physics-Based Molecular Docking)",
-            "OpenMMSimulationNode (GPU Molecular Dynamics Simulation)"
+            "BcftoolsMpileup, BcftoolsCall & BcftoolsFilter",
+            "Cyvcf2Stats, Mosdepth & PysamStats",
+            "PybedtoolsIntersect & SeqKitStats",
         ]
     },
     {
-        "name": "Proteomics & Metabolomics",
-        "total_count": 15,
-        "nodes": [
-            "PyOpenMSFeatureNode (LC-MS 2D/3D Feature Detection Engine)",
-            "DiaNNQuantNode (Neural Network DIA Proteomics Quantifier)",
-            "MSFraggerSearchNode (Ultra-Fast Peptide Database Search)",
-            "MatchmsSpectrumNode (Mass Spectral Similarity Engine)",
-            "SiriusStructureNode (Metabolite MS/MS Molecular Formula)"
-        ]
-    },
-    {
-        "name": "DNA Variant Calling",
+        "name": "Taxonomic Profiling & Functional Annotation",
         "total_count": 7,
+        "color": "#65a30d",      # Lime
+        "bg_color": "#ecfccb",
         "nodes": [
-            "SampleMetadataValidatorNode (FASTQ & Ref Genome Validator)",
-            "BwaMem2AlignNode (Burrows-Wheeler DNA Sequence Aligner)",
-            "MarkDuplicatesNode (Picard Optical Duplicate Tagger)",
-            "BcftoolsCallNode & Filter (Multiallelic Variant Calling & Filter)",
-            "VariantVisualizationNode & Report (SNV/Indel Spectrum & Ti/Tv)"
+            "Kraken2Classify, Bracken & SylphProfile",
+            "MetaPhlAn & HUMAnN",
+            "Prokka & Bakta",
+        ]
+    },
+    {
+        "name": "Single-Cell Processing & Manifold Learning",
+        "total_count": 4,
+        "color": "#9333ea",      # Purple
+        "bg_color": "#f3e8ff",
+        "nodes": [
+            "AnnDataInspect",
+            "ScanpyQC & ScanpyNormalize",
+            "ScanpyCluster",
+        ]
+    },
+    {
+        "name": "3D Structure Prediction & Molecular Docking",
+        "total_count": 4,
+        "color": "#e11d48",      # Rose
+        "bg_color": "#ffe4e6",
+        "nodes": [
+            "ColabFold & ESMFold",
+            "AutoDockVina & RDKitDescriptor",
+        ]
+    },
+    {
+        "name": "Sequence Analytics & Workflow Utilities",
+        "total_count": 9,
+        "color": "#475569",      # Slate
+        "bg_color": "#f1f5f9",
+        "nodes": [
+            "BiopythonSeqIOStats & BiopythonGCContent",
+            "BiopythonPairwiseAlign & BiopythonAlignmentStats",
+            "BiopythonProtParam & BiopythonRestrictionDigest",
+            "BiopythonSeqFilter & BiopythonSeqTransform",
+            "JoinPaths",
+        ]
+    },
+    {
+        "name": "Multi-Omics Data Visualization & Genomic Tracks",
+        "total_count": 23,
+        "color": "#0284c7",      # Sky
+        "bg_color": "#e0f2fe",
+        "nodes": [
+            "VolcanoPlot, MaPlot & ClustermapHeatmap",
+            "ManhattanPlot, QqPlot & LinkageDisequilibrium",
+            "SyntenyGenome & OncoPrint",
+            "MicrobiomeStackedBar, PcoaScatter & PhylogeneticTree",
+            "UmapScatter, SankeyCellFate & SpatialTissueOverlay",
+            "ProteinLigandInteraction, RamachandranPlot & MdTrajectoryPlotter",
+            "GseaEnrichmentPlot & KaplanMeierSurvival",
+            "DeeptoolsMatrix, ChipAtacCoverageProfile, BedGraphToBigWig & BedtoolsGenomeCoverage",
         ]
     }
 ]
 
+
 def render_aligned_tree(out_path='figures/fig2_node_domain_distribution.png'):
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     plt.rcParams['font.family'] = 'DejaVu Sans'
     plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Helvetica']
 
-    total_ecosystem_nodes = sum(d["total_count"] for d in GOLDEN_WORKFLOW_DATA)
+    total_ecosystem_nodes = sum(d["total_count"] for d in DOMAINS_DATA)
+    total_domains = len(DOMAINS_DATA)
 
-    fig_w, fig_h = 18.5, 13.5
+    fig_w, fig_h = 16.0, 13.0
     dpi = 300
 
     fig, ax = plt.subplots(figsize=(fig_w, fig_h), dpi=dpi)
@@ -136,13 +159,16 @@ def render_aligned_tree(out_path='figures/fig2_node_domain_distribution.png'):
     slot_allocations = []
     current_y = 0.0
 
-    for d in reversed(GOLDEN_WORKFLOW_DATA):
+    # Layout domains from bottom to top
+    for d in reversed(DOMAINS_DATA):
         n_leaves = len(d["nodes"])
         leaf_slots = [current_y + (n_leaves - 1 - i) * 1.0 for i in range(n_leaves)]
         domain_center_y = np.mean(leaf_slots)
         slot_allocations.append({
             "name": d["name"],
             "total_count": d["total_count"],
+            "color": d["color"],
+            "bg_color": d["bg_color"],
             "nodes": d["nodes"],
             "leaf_ys_raw": leaf_slots,
             "domain_y_raw": domain_center_y
@@ -152,7 +178,7 @@ def render_aligned_tree(out_path='figures/fig2_node_domain_distribution.png'):
     slot_allocations = list(reversed(slot_allocations))
     max_raw_y = current_y - domain_gap
 
-    y_min_target, y_max_target = 0.045, 0.955
+    y_min_target, y_max_target = 0.038, 0.962
     def norm_y(val):
         return y_min_target + (val / max_raw_y) * (y_max_target - y_min_target)
 
@@ -160,16 +186,14 @@ def render_aligned_tree(out_path='figures/fig2_node_domain_distribution.png'):
         d["leaf_ys"] = [norm_y(y) for y in d["leaf_ys_raw"]]
         d["domain_y"] = norm_y(d["domain_y_raw"])
 
-    x_root = 0.075
-    x_domain_in = 0.23
-    x_domain_text = 0.242
+    x_root = 0.115
+    x_domain_in = 0.285
+    x_domain_text = 0.297
     y_root = norm_y(max_raw_y / 2.0)
 
     curve_color_root = '#94a3b8'   # Slate 400
     curve_color_leaf = '#cbd5e1'   # Slate 300
-    circle_border = '#2563eb'      # Royal Blue
-    circle_fill = '#e0f2fe'        # Light Sky Blue
-    root_border = '#1d4ed8'        # Deep Blue
+    root_border = '#0f172a'        # Slate 900
     root_fill = '#bfdbfe'          # Soft Blue
 
     def draw_smooth_spline(x1, y1, x2, y2, color, lw=1.2, alpha=0.9):
@@ -186,11 +210,13 @@ def render_aligned_tree(out_path='figures/fig2_node_domain_distribution.png'):
         draw_smooth_spline(x_root, y_root, x_domain_in, d["domain_y"], color=curve_color_root, lw=1.5, alpha=0.9)
 
     # 2. Draw Root Node & Text
-    ax.scatter([x_root], [y_root], s=200, facecolor=root_fill, edgecolor=root_border, linewidth=2.2, zorder=5)
-    ax.text(x_root - 0.012, y_root + 0.016, "ComfyBIOWMS", 
-            ha='right', va='center', fontsize=13.0, fontweight='bold', color='#0f172a', zorder=6)
-    ax.text(x_root - 0.012, y_root - 0.016, f"(10 Domains · {total_ecosystem_nodes} Nodes)", 
-            ha='right', va='center', fontsize=9.4, fontweight='bold', color='#475569', zorder=6)
+    ax.scatter([x_root], [y_root], s=250, facecolor=root_fill, edgecolor=root_border, linewidth=2.4, zorder=5)
+    ax.text(x_root - 0.012, y_root + 0.017, "ComfyBIOWMS", 
+            ha='right', va='center', fontsize=13.5, fontweight='bold', color='#0f172a', zorder=6)
+    ax.text(x_root - 0.012, y_root - 0.008, f"{total_domains} Functional Modules", 
+            ha='right', va='center', fontsize=10.0, fontweight='bold', color='#1e293b', zorder=6)
+    ax.text(x_root - 0.012, y_root - 0.024, f"({total_ecosystem_nodes} Active Registered Nodes)", 
+            ha='right', va='center', fontsize=8.8, color='#475569', zorder=6)
 
     ax.set_xlim(0.0, 1.0)
     ax.set_ylim(0.0, 1.0)
@@ -200,10 +226,10 @@ def render_aligned_tree(out_path='figures/fig2_node_domain_distribution.png'):
     # 3. Draw Domain Nodes & Text and Measure Bounding Boxes
     domain_text_objs = []
     for d in slot_allocations:
-        ax.scatter([x_domain_in], [d["domain_y"]], s=115, facecolor=circle_fill, edgecolor=circle_border, linewidth=1.8, zorder=5)
+        ax.scatter([x_domain_in], [d["domain_y"]], s=115, facecolor=d["bg_color"], edgecolor=d["color"], linewidth=1.8, zorder=5)
         cat_text = f"{d['name']} ({d['total_count']} nodes)"
         t_obj = ax.text(x_domain_text, d["domain_y"], cat_text, 
-                        ha='left', va='center', fontsize=10.2, fontweight='bold', color='#1e293b', zorder=6)
+                        ha='left', va='center', fontsize=9.6, fontweight='bold', color='#0f172a', zorder=6)
         domain_text_objs.append((d, t_obj))
 
     # Canvas draw to get true text bounding boxes
@@ -211,38 +237,35 @@ def render_aligned_tree(out_path='figures/fig2_node_domain_distribution.png'):
     renderer = fig.canvas.get_renderer()
     inv_trans = ax.transAxes.inverted()
 
-    # Find the maximum right edge of the longest domain text
+    # Find maximum right edge of domain text
     max_text_right = max(t_obj.get_window_extent(renderer).transformed(inv_trans).x1 for _, t_obj in domain_text_objs)
-    print(f"Max domain text right edge: {max_text_right:.4f}")
-
-    # Set aligned branch starting point based on the longest domain name (tight margin of +0.016)
     x_aligned_branch = max_text_right + 0.016
-    x_aligned_leaf = x_aligned_branch + 0.088
-    print(f"Aligned branch point: {x_aligned_branch:.4f}, Aligned leaf column: {x_aligned_leaf:.4f}")
+    x_aligned_leaf = x_aligned_branch + 0.050
 
-    # 4. Draw horizontal connector from each domain text to the aligned branch point, and fan out to aligned leaf column
+    # 4. Draw horizontal connector and fanned out leaf nodes
     for d, t_obj in domain_text_objs:
         bbox = t_obj.get_window_extent(renderer).transformed(inv_trans)
         text_right = bbox.x1
         
-        # Horizontal line from the end of the text to the aligned branch point
-        ax.plot([text_right + 0.003, x_aligned_branch], [d["domain_y"], d["domain_y"]], color='#cbd5e1', lw=1.2, zorder=2)
+        # Line from domain text to branch point
+        ax.plot([text_right + 0.004, x_aligned_branch], [d["domain_y"], d["domain_y"]], color='#cbd5e1', lw=1.2, zorder=2)
         
-        # Draw Bézier curves fanning out from the unified branch point to the unified leaf column
+        # Splines from branch point to leaves
         for y_l in d["leaf_ys"]:
             draw_smooth_spline(x_aligned_branch, d["domain_y"], x_aligned_leaf, y_l, color=curve_color_leaf, lw=1.0, alpha=0.85)
 
-        # Draw Leaf circles & Labels
+        # Draw Leaf circles & Clean Node Labels
         for y_l, node_label in zip(d["leaf_ys"], d["nodes"]):
-            ax.scatter([x_aligned_leaf], [y_l], s=45, facecolor=circle_fill, edgecolor=circle_border, linewidth=1.3, zorder=5)
+            ax.scatter([x_aligned_leaf], [y_l], s=42, facecolor='#f8fafc', edgecolor=d["color"], linewidth=1.4, zorder=5)
             ax.text(x_aligned_leaf + 0.009, y_l, node_label, 
-                    ha='left', va='center', fontsize=8.5, color='#334155', zorder=6)
+                    ha='left', va='center', fontsize=8.8, color='#1e293b', fontweight='normal', zorder=6)
 
     plt.savefig(out_path, dpi=dpi, bbox_inches='tight', pad_inches=0.15, facecolor='#ffffff')
     plt.close()
-    print(f"Successfully generated aligned tree at {out_path}")
+    print(f"Successfully generated functional tree at {out_path}")
+
 
 if __name__ == '__main__':
     render_aligned_tree('figures/fig2_node_domain_distribution.png')
-    import shutil
     shutil.copyfile('figures/fig2_node_domain_distribution.png', 'figures/fig2_golden_workflow_tree.png')
+    print("Copied to figures/fig2_golden_workflow_tree.png")

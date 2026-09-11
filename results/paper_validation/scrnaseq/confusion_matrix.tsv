@@ -1,0 +1,9 @@
+	Pred_Ductal	Pred_Ngn3 low EP	Pred_Ngn3 high EP	Pred_Pre-endocrine	Pred_Beta	Pred_Alpha	Pred_Delta	Pred_Epsilon
+True_Ductal	916	0	0	0	0	0	0	0
+True_Ngn3 low EP	260	0	2	0	0	0	0	0
+True_Ngn3 high EP	26	0	604	12	0	0	0	0
+True_Pre-endocrine	0	0	41	432	0	41	66	12
+True_Beta	0	0	0	61	482	38	8	2
+True_Alpha	0	0	0	2	1	461	0	17
+True_Delta	0	0	0	0	0	0	70	0
+True_Epsilon	0	0	0	0	0	2	0	140

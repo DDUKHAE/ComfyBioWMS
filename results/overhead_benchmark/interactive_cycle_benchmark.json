@@ -1,0 +1,71 @@
+{
+  "summary": {
+    "cold_start_sec": 4.4519,
+    "unchanged_resubmit_sec": 0.0015,
+    "downstream_tweak_sec": 3.9201,
+    "latency_reduction_percent": 11.95,
+    "upstream_tweak_sec": 4.3508
+  },
+  "stages": [
+    {
+      "stage": "stage_1_initial",
+      "user_action": "Initial graph submission (cold cache)",
+      "wall_time_sec": 4.4519,
+      "executed_nodes_count": 5,
+      "cached_nodes_count": 0,
+      "node_statuses": {
+        "1_Fastp": "EXECUTED (0.238s)",
+        "2_SalmonQuant": "EXECUTED (0.243s)",
+        "3_Tximport": "EXECUTED (0.003s)",
+        "4_DESeq2": "EXECUTED (3.736s)",
+        "5_VolcanoPlot": "EXECUTED (0.229s)"
+      },
+      "preview_generated": true
+    },
+    {
+      "stage": "stage_2_resubmit",
+      "user_action": "Resubmit with identical parameters",
+      "wall_time_sec": 0.0015,
+      "executed_nodes_count": 0,
+      "cached_nodes_count": 5,
+      "node_statuses": {
+        "1_Fastp": "CACHED",
+        "2_SalmonQuant": "CACHED",
+        "3_Tximport": "CACHED",
+        "4_DESeq2": "CACHED",
+        "5_VolcanoPlot": "CACHED"
+      },
+      "preview_generated": true
+    },
+    {
+      "stage": "stage_3_downstream_tweak",
+      "user_action": "Adjust downstream cutoff widget (alpha 0.05 -> 0.01)",
+      "wall_time_sec": 3.9201,
+      "executed_nodes_count": 2,
+      "cached_nodes_count": 3,
+      "node_statuses": {
+        "1_Fastp": "CACHED",
+        "2_SalmonQuant": "CACHED",
+        "3_Tximport": "CACHED",
+        "4_DESeq2": "EXECUTED (3.762s)",
+        "5_VolcanoPlot": "EXECUTED (0.157s)"
+      },
+      "preview_generated": true
+    },
+    {
+      "stage": "stage_4_upstream_tweak",
+      "user_action": "Adjust upstream QC widget (Phred 15 -> 28)",
+      "wall_time_sec": 4.3508,
+      "executed_nodes_count": 5,
+      "cached_nodes_count": 0,
+      "node_statuses": {
+        "1_Fastp": "EXECUTED (0.283s)",
+        "2_SalmonQuant": "EXECUTED (0.180s)",
+        "3_Tximport": "EXECUTED (0.002s)",
+        "4_DESeq2": "EXECUTED (3.728s)",
+        "5_VolcanoPlot": "EXECUTED (0.156s)"
+      },
+      "preview_generated": true
+    }
+  ]
+}

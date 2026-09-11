@@ -1,0 +1,23 @@
+experiment_id,pipeline_stage,status,details,timestamp
+R-01,Registration,SUCCESS,All 5 nodes registered in NODE_CLASS_MAPPINGS,2026-09-10T18:18:36Z
+R-01,GraphValidation,SUCCESS,Signatures and port types verified,2026-09-10T18:18:36Z
+R-02,Fastp_Preprocessing,SUCCESS,Processed 4 paired samples in /Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/results/paper_validation/rnaseq/runs/run_R02_comfy_full/fastp,2026-09-10T18:18:37Z
+R-02,Salmon_Index,SUCCESS,Index generated in /Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/results/paper_validation/rnaseq/runs/run_R02_comfy_full/salmon_index,2026-09-10T18:18:37Z
+R-02,Salmon_Quantification,SUCCESS,Quantified 4 samples in /Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/results/paper_validation/rnaseq/runs/run_R02_comfy_full/salmon_quant,2026-09-10T18:18:38Z
+R-02,Tximport_Aggregation,SUCCESS,Aggregated 125 genes in /Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/results/paper_validation/rnaseq/runs/run_R02_comfy_full/tximport/gene_counts.tsv,2026-09-10T18:18:38Z
+R-02,DESeq2_Analysis,SUCCESS,DESeq2 finished in /Users/ydj_mac/Library/CloudStorage/OneDrive-개인/Project/ComfyBIOWMS/results/paper_validation/rnaseq/runs/run_R02_comfy_full/deseq2/deseq2_results.csv,2026-09-10T18:18:42Z
+R-03,Native_Fastp,SUCCESS,Direct CLI fastp completed,2026-09-10T18:18:43Z
+R-03,Native_Salmon_Index,SUCCESS,Direct CLI salmon index completed,2026-09-10T18:18:43Z
+R-03,Native_Salmon_Quant,SUCCESS,Direct CLI salmon quant completed,2026-09-10T18:18:44Z
+R-03,Native_R_Tximport_DESeq2,SUCCESS,Direct Bioconductor tximport & DESeq2 completed,2026-09-10T18:18:49Z
+R-03,Concordance_Verification,PASSED,"125 genes evaluated (103 valid Wald, 22 NA). Max LFC diff=0.00e+00, Max TPM diff=5.00e-05, Max Count diff=0.301",2026-09-10T18:18:49Z
+R-04,Repeat_Run_1,SUCCESS,"Runtime: 6.18s, 125 genes",2026-09-10T18:18:55Z
+R-04,Repeat_Run_2,SUCCESS,"Runtime: 5.76s, 125 genes",2026-09-10T18:19:01Z
+R-04,Repeat_Run_3,SUCCESS,"Runtime: 5.74s, 125 genes",2026-09-10T18:19:06Z
+R-04,IS_CHANGED_Cache,SUCCESS,Cache key evaluation: 0.314 ms,2026-09-10T18:19:06Z
+R-05,Parameter_Perturbation_Phred,SUCCESS,Phred 15->28 filtered additional 5808 reads,2026-09-10T18:19:07Z
+R-05,Input_Perturbation_Subsample,SUCCESS,Detected changed FASTQ: 2000 raw reads -> 1906 filtered reads,2026-09-10T18:19:07Z
+R-06,Fault_Missing_R2,HANDLED_FAILURE,Clean exception caught: FileNotFoundError,2026-09-10T18:19:07Z
+R-06,Fault_Bad_Binary,HANDLED_FAILURE,Clean exception caught: FileNotFoundError,2026-09-10T18:19:07Z
+R-06,Fault_Metadata_Mismatch,HANDLED_FAILURE,Clean exception caught: ValueError,2026-09-10T18:19:07Z
+R-07,Independent_Provenance_Replay,PASS,"Independent replay in new directory evaluated (125 genes). Max LFC diff=0.00e+00, Max pval diff=0.00e+00",2026-09-10T18:19:13Z

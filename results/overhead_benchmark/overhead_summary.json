@@ -1,0 +1,48 @@
+{
+  "benchmark_file": "SRR6357070_1.fastq.gz",
+  "tool_executable": "/opt/miniconda3/envs/bulk_rna_seq/bin/fastp",
+  "environment": "bulk_rna_seq",
+  "n_repeats": 5,
+  "native_cli": {
+    "mean_sec": 0.2274,
+    "median_sec": 0.2275,
+    "stdev_sec": 0.0016,
+    "raw_sec": [
+      0.2294,
+      0.2275,
+      0.2279,
+      0.2271,
+      0.225
+    ]
+  },
+  "comfybio_node": {
+    "mean_sec": 0.2296,
+    "median_sec": 0.2294,
+    "stdev_sec": 0.0017,
+    "raw_sec": [
+      0.2282,
+      0.2294,
+      0.2324,
+      0.2299,
+      0.2284
+    ]
+  },
+  "comfyui_cache_check": {
+    "mean_ms": 0.126,
+    "median_ms": 0.154,
+    "raw_ms": [
+      0.196,
+      0.155,
+      0.154,
+      0.049,
+      0.077
+    ]
+  },
+  "overhead": {
+    "delta_sec": 0.0023,
+    "overhead_percent": 1.0
+  },
+  "memory": {
+    "python_backend_peak_rss_mb": 136.06
+  }
+}

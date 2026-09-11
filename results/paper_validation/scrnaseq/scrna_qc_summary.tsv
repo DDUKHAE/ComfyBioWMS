@@ -1,0 +1,12 @@
+Metric	Value	Note
+Total cells in h5ad	3696	E15.5 Pancreas
+Total genes in h5ad	27998	Full feature matrix
+Raw count matrix type	csr_matrix	Sparse CSR matrix
+Raw count integer verification	True	Exact integer UMI counts
+Count value range (min, max)	[1, 2286]	Valid UMI distribution
+Mitochondrial genes detected	13	Prefix MT-/mt-
+Mean mitochondrial percentage	0.724%	Low mito content
+Max mitochondrial percentage	4.328%	Well below 20% limit
+Cells passing min_genes >= 200	3696 / 3696 (100.0%)	Author pre-filtered
+Cells passing pct_mt < 20%	3696 / 3696 (100.0%)	High viability
+Genes passing min_cells >= 3	15737 / 27998	15,737 retained genes

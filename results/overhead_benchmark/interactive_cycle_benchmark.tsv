@@ -1,0 +1,5 @@
+stage	user_action	wall_time_sec	executed_nodes	cached_nodes	preview_updated	node_statuses
+stage_1_initial	Initial graph submission (cold cache)	4.4519	5	0	True	1_Fastp:EXECUTED (0.238s); 2_SalmonQuant:EXECUTED (0.243s); 3_Tximport:EXECUTED (0.003s); 4_DESeq2:EXECUTED (3.736s); 5_VolcanoPlot:EXECUTED (0.229s)
+stage_2_resubmit	Resubmit with identical parameters	0.0015	0	5	True	1_Fastp:CACHED; 2_SalmonQuant:CACHED; 3_Tximport:CACHED; 4_DESeq2:CACHED; 5_VolcanoPlot:CACHED
+stage_3_downstream_tweak	Adjust downstream cutoff widget (alpha 0.05 -> 0.01)	3.9201	2	3	True	1_Fastp:CACHED; 2_SalmonQuant:CACHED; 3_Tximport:CACHED; 4_DESeq2:EXECUTED (3.762s); 5_VolcanoPlot:EXECUTED (0.157s)
+stage_4_upstream_tweak	Adjust upstream QC widget (Phred 15 -> 28)	4.3508	5	0	True	1_Fastp:EXECUTED (0.283s); 2_SalmonQuant:EXECUTED (0.180s); 3_Tximport:EXECUTED (0.002s); 4_DESeq2:EXECUTED (3.728s); 5_VolcanoPlot:EXECUTED (0.156s)
